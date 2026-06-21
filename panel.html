@@ -559,7 +559,7 @@ function setAuthConnected() {
 // Check for OAuth callback in URL
 (async () => {
   const params = new URLSearchParams(window.location.search);
-  if (params.get('oauth_callback') && params.get('code')) {
+  if (params.get('state') === 'miro_oauth' && params.get('code')) {
     await handleOAuthCallback(params.get('code'));
     window.history.replaceState({}, '', window.location.pathname);
   } else {
