@@ -94,9 +94,11 @@
 </div>
 
 <div style="background:#060d09;border-bottom:1px solid #1e3a2e;padding:6px 12px;display:flex;gap:6px;align-items:center">
-  <span style="color:#4a7a5e;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap">MIRO:</span>
-  <span id="auth-status" style="color:#e87c3e;font-size:9px;font-weight:700;letter-spacing:1px;flex:1">NOT CONNECTED</span>
-  <button id="auth-btn" onclick="connectMiro()" style="background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;padding:4px 10px;cursor:pointer;white-space:nowrap">CONNECT ↗</button>
+  <span style="color:#4a7a5e;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap">TOKEN:</span>
+  <input id="token-input" type="password" placeholder="Paste Miro token..." style="flex:1;font-size:10px;padding:4px 6px;background:#0a0c0e;border:1px solid #1e3a2e;color:#c8d0d8;font-family:'Courier New',monospace">
+  <button onclick="setToken()" style="background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;padding:4px 8px;cursor:pointer;white-space:nowrap">SET</button>
+  <span id="token-timer" style="color:#4a7a5e;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap">--:--</span>
+  <a href="https://miro.com/app/settings/user-profile/apps" target="_blank" style="color:#2dba6e;font-size:9px;font-weight:700;letter-spacing:1px;text-decoration:none;white-space:nowrap">↗ GET</a>
 </div>
 
 <div class="tabs">
@@ -501,99 +503,54 @@ let MIRO_TOKEN = '';
 const MIRO_BOARD_ID = 'uXjVI0qw29Q=';
 const WORKER_URL = 'https://orange-moon-c3be.donald-caribbean1.workers.dev';
 
-// --- OAuth ---
-function connectMiro() {
-  const redirectUri = encodeURIComponent('https://donaldcaribbean1-oss.github.io/s2-analyst/panel.html');
-  window.location.href = `https://miro.com/oauth/authorize?response_type=token&client_id=3458764676137142473&redirect_uri=${redirectUri}&state=miro_oauth`;
-}
+let tokenExpiry = null;
+let timerInterval = null;
 
-async function handleOAuthCallback(token) {
-  if (!token) return;
-  MIRO_TOKEN = token;
-  setAuthConnected();
+function setToken() {
+  const val = document.getElementById('token-input').value.trim();
+  if (!val || val.length < 10) { showToast('INVALID TOKEN'); return; }
+  MIRO_TOKEN = val;
+  tokenExpiry = Date.now() + 60 * 60 * 1000;
+  localStorage.setItem('miro_token', val);
+  localStorage.setItem('miro_expiry', String(tokenExpiry));
+  startTimer();
   loadBoardName();
-  showToast('MIRO CONNECTED');
+  showToast('TOKEN SET — 60:00 REMAINING');
 }
 
-async function handleOAuthCallback(code) {
-  document.getElementById('auth-status').textContent = 'AUTHENTICATING...';
-  try {
-    const resp = await fetch(WORKER_URL + '/miro/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, grant_type: 'authorization_code' })
-    });
-    const data = await resp.json();
-    if (data.access_token) {
-      MIRO_TOKEN = data.access_token;
-      if (data.refresh_token) {
-        localStorage.setItem('miro_refresh', data.refresh_token);
-      }
-      setAuthConnected();
-      loadBoardName();
-    } else {
-      document.getElementById('auth-status').textContent = 'AUTH FAILED';
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    if (!tokenExpiry) return;
+    const remaining = tokenExpiry - Date.now();
+    if (remaining <= 0) {
+      document.getElementById('token-timer').textContent = 'EXPIRED';
+      document.getElementById('token-timer').style.color = '#e87c3e';
+      clearInterval(timerInterval);
+      return;
     }
-  } catch(e) {
-    document.getElementById('auth-status').textContent = 'AUTH ERROR';
-  }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    const el = document.getElementById('token-timer');
+    el.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+    el.style.color = remaining < 5 * 60 * 1000 ? '#e87c3e' : '#2dba6e';
+  }, 1000);
 }
 
-async function refreshMiroToken() {
-  const refresh = localStorage.getItem('miro_refresh');
-  if (!refresh) return false;
-  try {
-    const resp = await fetch(WORKER_URL + '/miro/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refresh, grant_type: 'refresh_token' })
-    });
-    const data = await resp.json();
-    if (data.access_token) {
-      MIRO_TOKEN = data.access_token;
-      if (data.refresh_token) localStorage.setItem('miro_refresh', data.refresh_token);
-      setAuthConnected();
-      return true;
-    }
-  } catch(e) {}
-  return false;
-}
-
-function setAuthConnected() {
-  document.getElementById('auth-status').textContent = 'CONNECTED';
-  document.getElementById('auth-status').style.color = '#2dba6e';
-  document.getElementById('auth-btn').textContent = 'RECONNECT';
-}
-
-// Check for OAuth callback — implicit flow returns token in URL hash
-(async () => {
-  const hash = new URLSearchParams(window.location.hash.replace('#', ''));
-  const params = new URLSearchParams(window.location.search);
-
-  if (hash.get('access_token')) {
-    await handleOAuthCallback(hash.get('access_token'));
-    window.history.replaceState({}, '', window.location.pathname);
-  } else if (params.get('state') === 'miro_oauth' && params.get('code')) {
-    // fallback code flow
-    await handleOAuthCallback(null);
-    window.history.replaceState({}, '', window.location.pathname);
+// Restore token from localStorage on load
+(function restoreToken() {
+  const saved = localStorage.getItem('miro_token');
+  const expiry = parseInt(localStorage.getItem('miro_expiry') || '0');
+  if (saved && expiry > Date.now()) {
+    MIRO_TOKEN = saved;
+    tokenExpiry = expiry;
+    document.getElementById('token-input').value = saved;
+    startTimer();
+    loadBoardName();
   } else {
-    const refreshed = await refreshMiroToken();
-    if (!refreshed) {
-      document.getElementById('auth-status').textContent = 'CLICK CONNECT';
-    }
+    document.getElementById('token-timer').textContent = 'NO TOKEN';
   }
 })();
-
-// Auto-refresh token every 45 minutes
-setInterval(refreshMiroToken, 45 * 60 * 1000);
-
-function updateToken(val) {
-  if (!val || val.trim().length < 10) return;
-  MIRO_TOKEN = val.trim();
-  setAuthConnected();
-  loadBoardName();
-}
 
 async function scrubNAIs(postBoard = true) {
   const status = document.getElementById('nai-status');
