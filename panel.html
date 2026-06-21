@@ -339,6 +339,11 @@ function addPIR() {
 // Miro init
 async function initMiro() {
   try {
+    // Register panel entry point so app appears in Miro sidebar
+    await miro.board.ui.on('icon:click', async () => {
+      await miro.board.ui.openPanel({ url: window.location.href });
+    });
+
     await miro.board.getInfo().then(info => {
       document.getElementById('board-name').textContent = info.name.substring(0,12).toUpperCase();
       boardConnected = true;

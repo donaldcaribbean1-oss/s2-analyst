@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
+</head>
+<body>
+<script>
+miro.onReady(() => {
+  miro.board.ui.on('icon:click', async () => {
+    await miro.board.ui.openPanel({
+      url: 'panel.html',
+      width: 380
+    });
+  });
+});
+</script>
+</body>
+</html>
