@@ -94,6 +94,7 @@
 
 <div class="tabs">
   <button class="tab active" onclick="switchTab('quick')">QUICK</button>
+  <button class="tab" onclick="switchTab('scrub')">SCRUB BOARD</button>
   <button class="tab" onclick="switchTab('salute')">SALUTE</button>
   <button class="tab" onclick="switchTab('pir')">PIR/NAI</button>
   <button class="tab" onclick="switchTab('coa')">COA</button>
@@ -101,7 +102,35 @@
   <button class="tab" onclick="switchTab('freeform')">FREE</button>
 </div>
 
-<!-- QUICK TAB -->
+<!-- SCRUB BOARD TAB -->
+<div class="panel" id="panel-scrub">
+  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">
+    Pulls all sticky notes and text from your Miro board and generates a full intel assessment. Board: <b style="color:#2dba6e">OPERATION MIDNIGHT SUN</b>
+  </div>
+
+  <div class="field">
+    <label class="label">SCRUB MODE</label>
+    <select id="scrub-mode">
+      <option value="full">Full Intel Picture — comprehensive assessment of all board content</option>
+      <option value="threat">Threat Summary — extract and assess all OPFOR intel</option>
+      <option value="pir">PIR Generation — generate PIRs from board content</option>
+      <option value="sitrep">SITREP — format board content as an intel SITREP</option>
+      <option value="gaps">Intel Gaps — identify what intelligence is missing</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="label">FOCUS AREA <span class="sublabel">(optional — filter by keyword)</span></label>
+    <input id="scrub-filter" type="text" placeholder="e.g. OPFOR, NAI-01, port, vehicles...">
+  </div>
+
+  <button class="btn" id="btn-scrub" onclick="scrubBoard(true)">SCRUB BOARD + POST ASSESSMENT ↗</button>
+  <button class="btn btn-secondary" onclick="scrubBoard(false)">SCRUB BOARD (PANEL ONLY)</button>
+
+  <div id="scrub-status" style="display:none;margin-top:10px;font-size:10px;color:#4a7a5e;line-height:1.6"></div>
+</div>
+
+
 <div class="panel active" id="panel-quick">
   <div class="selection-info" id="sel-info">
     <b>SELECTED:</b> <span id="sel-preview">--</span>
@@ -433,7 +462,93 @@ function copyOutput() {
 }
 
 // Build prompts
-const SYSTEM = `You are an intelligence analyst embedded with a Delta Force special operations unit in an ARMA 3 military simulation. Produce professional, realistic military intelligence analysis using proper military formats, brevity codes, and terminology. Be concise, tactical, and operationally relevant. No disclaimers. Output as if it's a real classified document.`;
+const MIRO_TOKEN = 'eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_GioyO2llbTq2pOpvVpjMdJBaa3o';
+const MIRO_BOARD_ID = 'uXjVHDKoM8I=';
+
+async function scrubBoard(postBoard = true) {
+  const status = document.getElementById('scrub-status');
+  status.style.display = 'block';
+  status.textContent = '[ CONNECTING TO BOARD... ]';
+  setLoading(true);
+  showOutput('⬛ SCRUBBING BOARD...', 'BOARD SCRUB');
+
+  try {
+    // Fetch all items from Miro board via REST API
+    let allContent = [];
+    let cursor = null;
+    let page = 0;
+
+    do {
+      const url = `https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50${cursor ? '&cursor=' + cursor : ''}`;
+      status.textContent = `[ PULLING BOARD DATA... PAGE ${++page} ]`;
+
+      const resp = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${MIRO_TOKEN}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Miro API error: ${resp.status} ${resp.statusText}`);
+      }
+
+      const data = await resp.json();
+      const items = data.data || [];
+
+      items.forEach(item => {
+        let text = '';
+        if (item.type === 'sticky_note') text = item.data?.content || '';
+        else if (item.type === 'text') text = item.data?.content || '';
+        else if (item.type === 'shape') text = item.data?.content || '';
+        else if (item.type === 'card') text = `${item.data?.title || ''} ${item.data?.description || ''}`.trim();
+        else if (item.type === 'frame') text = `[FRAME: ${item.data?.title || 'untitled'}]`;
+
+        // Strip HTML tags
+        text = text.replace(/<[^>]*>/g, '').trim();
+
+        if (text.length > 2) {
+          const filter = document.getElementById('scrub-filter').value.trim().toLowerCase();
+          if (!filter || text.toLowerCase().includes(filter)) {
+            allContent.push(`[${item.type.toUpperCase()}] ${text}`);
+          }
+        }
+      });
+
+      cursor = data.cursor || null;
+    } while (cursor && page < 10);
+
+    if (allContent.length === 0) {
+      throw new Error('No readable content found on board. Add sticky notes or text blocks first.');
+    }
+
+    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — RUNNING ANALYSIS... ]`;
+
+    const mode = document.getElementById('scrub-mode').value;
+    const modePrompts = {
+      full: `You are analyzing the complete contents of a Delta Force ARMA 3 operations Miro board called "OPERATION MIDNIGHT SUN". Generate a comprehensive intelligence assessment covering: (1) overall situation picture, (2) OPFOR assessment, (3) key terrain and NAIs, (4) friendly force status, (5) intelligence gaps, (6) recommended priorities. Format as a classified intel brief.`,
+      threat: `Analyze this Miro board content and extract all OPFOR/enemy intelligence. Generate a threat assessment covering: capabilities, TTPs, most likely COA, most dangerous COA, threat matrix. Format as a classified threat assessment.`,
+      pir: `Analyze this Miro board content and generate Priority Intelligence Requirements (PIRs) with associated indicators and NAI recommendations based on what's present and what's missing.`,
+      sitrep: `Format the content of this Miro operations board as a military SITREP. Include: situation, enemy, friendly, assessment, outlook.`,
+      gaps: `Analyze this Miro board content and identify critical intelligence gaps — what key information is missing that commanders need before executing operations. Prioritize by operational impact.`
+    };
+
+    const prompt = `${modePrompts[mode]}\n\nBOARD CONTENT (${allContent.length} items):\n\n${allContent.join('\n\n')}`;
+    const result = await callClaude(prompt);
+
+    showOutput(result, 'BOARD SCRUB — ' + mode.toUpperCase());
+    status.textContent = `[ COMPLETE — ${allContent.length} ITEMS PROCESSED ]`;
+    if (postBoard) await postToBoard(result);
+
+  } catch(e) {
+    showOutput('SCRUB ERROR: ' + e.message, 'ERROR');
+    status.textContent = '[ ERROR: ' + e.message + ' ]';
+  }
+
+  setLoading(false);
+}
+
+ embedded with a Delta Force special operations unit in an ARMA 3 military simulation. Produce professional, realistic military intelligence analysis using proper military formats, brevity codes, and terminology. Be concise, tactical, and operationally relevant. No disclaimers. Output as if it's a real classified document.`;
 
 function buildPrompt(type) {
   const dtg = document.getElementById('dtg').textContent;
@@ -470,7 +585,7 @@ function quickActionPrompt(action, content) {
 }
 
 async function callClaude(userPrompt) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetch('https://orange-moon-c3be.donald-caribbean1.workers.dev/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
