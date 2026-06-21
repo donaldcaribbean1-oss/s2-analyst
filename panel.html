@@ -504,7 +504,15 @@ const WORKER_URL = 'https://orange-moon-c3be.donald-caribbean1.workers.dev';
 // --- OAuth ---
 function connectMiro() {
   const redirectUri = encodeURIComponent('https://donaldcaribbean1-oss.github.io/s2-analyst/panel.html');
-  window.location.href = `https://miro.com/oauth/authorize?response_type=code&client_id=3458764676133043409&redirect_uri=${redirectUri}&state=miro_oauth`;
+  window.location.href = `https://miro.com/oauth/authorize?response_type=token&client_id=3458764676133043409&redirect_uri=${redirectUri}&state=miro_oauth`;
+}
+
+async function handleOAuthCallback(token) {
+  if (!token) return;
+  MIRO_TOKEN = token;
+  setAuthConnected();
+  loadBoardName();
+  showToast('MIRO CONNECTED');
 }
 
 async function handleOAuthCallback(code) {
@@ -557,14 +565,19 @@ function setAuthConnected() {
   document.getElementById('auth-btn').textContent = 'RECONNECT';
 }
 
-// Check for OAuth callback in URL
+// Check for OAuth callback — implicit flow returns token in URL hash
 (async () => {
+  const hash = new URLSearchParams(window.location.hash.replace('#', ''));
   const params = new URLSearchParams(window.location.search);
-  if (params.get('state') === 'miro_oauth' && params.get('code')) {
-    await handleOAuthCallback(params.get('code'));
+
+  if (hash.get('access_token')) {
+    await handleOAuthCallback(hash.get('access_token'));
+    window.history.replaceState({}, '', window.location.pathname);
+  } else if (params.get('state') === 'miro_oauth' && params.get('code')) {
+    // fallback code flow
+    await handleOAuthCallback(null);
     window.history.replaceState({}, '', window.location.pathname);
   } else {
-    // Try to restore session from refresh token
     const refreshed = await refreshMiroToken();
     if (!refreshed) {
       document.getElementById('auth-status').textContent = 'CLICK CONNECT';
