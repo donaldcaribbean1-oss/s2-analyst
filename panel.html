@@ -5,75 +5,78 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>S2 Intel Analyst</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0a0c0e;color:#c8d0d8;font-family:'Courier New',monospace;font-size:12px;overflow-x:hidden;overflow-y:auto;height:auto}
-  .header{background:#060d09;border-bottom:1px solid #1e3a2e;padding:10px 12px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10}
-  .dot{width:7px;height:7px;background:#2dba6e;border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  .header-title{color:#2dba6e;font-size:13px;font-weight:700;letter-spacing:2px}
-  .header-sub{color:#4a7a5e;font-size:9px;letter-spacing:1px}
-  .dtg{color:#4a7a5e;font-size:9px;margin-left:auto;letter-spacing:1px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0c0e;color:#c8d0d8;font-family:'Courier New',monospace;font-size:12px}
+.header{background:#060d09;border-bottom:1px solid #1e3a2e;padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.dot{width:7px;height:7px;background:#2dba6e;border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.header-title{color:#2dba6e;font-size:14px;font-weight:700;letter-spacing:2px}
+.header-sub{color:#4a7a5e;font-size:9px;letter-spacing:1px}
+.dtg{color:#2dba6e;font-size:9px;margin-left:auto;letter-spacing:1px;font-weight:700}
 
-  .tabs{display:flex;border-bottom:1px solid #1e3a2e;overflow-x:auto;scrollbar-width:none}
-  .tabs::-webkit-scrollbar{display:none}
-  .tab{background:none;border:none;border-bottom:2px solid transparent;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:8px 10px;cursor:pointer;white-space:nowrap;transition:all .15s}
-  .tab.active{color:#2dba6e;border-bottom-color:#2dba6e}
-  .tab:hover:not(.active){color:#7abf9e}
+.token-bar{background:#060d09;border-bottom:1px solid #1e3a2e;padding:6px 12px;display:flex;gap:6px;align-items:center}
+.token-label{color:#4a7a5e;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap}
+input[type=password],input[type=text],textarea,select{background:#060d09;border:1px solid #1e3a2e;color:#c8d0d8;font-family:'Courier New',monospace;font-size:11px;padding:6px 8px;outline:none;transition:border-color .15s;width:100%;resize:vertical}
+input[type=password]:focus,input[type=text]:focus,textarea:focus,select:focus{border-color:#2dba6e}
+select option{background:#0a0c0e}
+#token-input{flex:1;font-size:10px;padding:4px 6px}
+.token-set-btn{background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;padding:4px 8px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.token-set-btn:hover{background:#1a4d2e}
+#token-timer{font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap;min-width:48px;text-align:right}
+.token-get-link{color:#2dba6e;font-size:9px;font-weight:700;text-decoration:none;white-space:nowrap;padding:4px 6px;border:1px solid #1e3a2e;transition:all .15s}
+.token-get-link:hover{border-color:#2dba6e}
 
-  .panel{display:none;padding:12px}
-  .panel.active{display:block}
+.status-bar{background:#060d09;border-bottom:1px solid #0d1a12;padding:5px 12px;display:flex;gap:16px}
+.stat{font-size:9px;color:#4a7a5e;letter-spacing:.5px}
+.stat b{color:#2dba6e}
 
-  .field{margin-bottom:10px}
-  .label{color:#2dba6e;font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:3px;display:block}
-  .sublabel{color:#4a7a5e;font-weight:400}
-  textarea,input,select{width:100%;background:#060d09;border:1px solid #1e3a2e;color:#c8d0d8;font-family:'Courier New',monospace;font-size:11px;padding:7px 8px;outline:none;transition:border-color .15s;resize:vertical}
-  textarea:focus,input:focus,select:focus{border-color:#2dba6e}
-  select option{background:#0a0c0e}
+.tabs{display:flex;border-bottom:1px solid #1e3a2e;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;letter-spacing:1.5px;padding:8px 10px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.tab.active{color:#2dba6e;border-bottom-color:#2dba6e}
+.tab:hover:not(.active){color:#7abf9e}
 
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.panel{display:none;padding:12px}
+.panel.active{display:block}
 
-  .btn{width:100%;background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:9px;cursor:pointer;transition:all .15s;margin-top:4px}
-  .btn:hover{background:#1a4d2e}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .btn-secondary{background:transparent;border-color:#1e3a2e;color:#4a7a5e;margin-top:6px}
-  .btn-secondary:hover{border-color:#2dba6e;color:#2dba6e;background:transparent}
+.field{margin-bottom:10px}
+.label{color:#2dba6e;font-size:9px;font-weight:700;letter-spacing:1.5px;margin-bottom:3px;display:block}
+.sublabel{color:#4a7a5e;font-weight:400}
 
-  .output{background:#060d09;border:1px solid #1e3a2e;padding:10px;margin-top:10px;display:none}
-  .output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1e3a2e}
-  .output-label{color:#2dba6e;font-size:9px;font-weight:700;letter-spacing:1.5px}
-  .output-actions{display:flex;gap:4px}
-  .mini-btn{background:transparent;border:1px solid #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;padding:2px 6px;cursor:pointer;transition:all .15s}
-  .mini-btn:hover{border-color:#2dba6e;color:#2dba6e}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
+.btn{width:100%;background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-family:'Courier New',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:9px;cursor:pointer;transition:all .15s;margin-top:4px}
+.btn:hover{background:#1a4d2e}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:transparent;border-color:#1e3a2e;color:#4a7a5e;margin-top:6px}
+.btn-secondary:hover{border-color:#2dba6e;color:#2dba6e;background:transparent}
 
-  .output-text{white-space:pre-wrap;font-size:11px;line-height:1.65;color:#c8d0d8}
-  .output-text::-webkit-scrollbar-track{background:#060d09}
-  .output-text::-webkit-scrollbar-thumb{background:#1e3a2e}
+.output-box{background:#060d09;border:1px solid #1e3a2e;padding:12px;margin-top:12px;display:none}
+.output-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #1e3a2e}
+.output-label{color:#2dba6e;font-size:9px;font-weight:700;letter-spacing:1.5px}
+.mini-btn{background:transparent;border:1px solid #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;padding:2px 8px;cursor:pointer;transition:all .15s}
+.mini-btn:hover{border-color:#2dba6e;color:#2dba6e}
+.output-text{white-space:pre-wrap;font-size:11px;line-height:1.7;color:#c8d0d8}
 
-  .spinner{display:inline-block;width:10px;height:10px;border:2px solid #1e3a2e;border-top-color:#2dba6e;border-radius:50%;animation:spin .7s linear infinite}
-  @keyframes spin{to{transform:rotate(360deg)}}
+.spinner{display:inline-block;width:10px;height:10px;border:2px solid #1e3a2e;border-top-color:#2dba6e;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  .status-bar{background:#060d09;border-bottom:1px solid #0d1a12;padding:5px 12px;display:flex;gap:12px}
-  .stat{font-size:9px;color:#4a7a5e;letter-spacing:.5px}
-  .stat b{color:#2dba6e}
+.toast{position:fixed;bottom:12px;right:12px;background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-size:10px;letter-spacing:1px;padding:6px 12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
 
-  .selection-info{background:#0d1a12;border:1px solid #1a3a2e;border-left:2px solid #2dba6e;padding:7px 10px;font-size:10px;color:#4a7a5e;margin-bottom:10px;display:none}
-  .selection-info b{color:#2dba6e}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.quick-btn{background:#0d1a12;border:1px solid #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:8px 6px;cursor:pointer;transition:all .15s;text-align:center}
+.quick-btn:hover{border-color:#2dba6e;color:#2dba6e;background:#0d2b1e}
 
-  .pir-item{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px}
-  .pir-num{color:#2dba6e;font-size:9px;font-weight:700;min-width:32px;padding-top:8px}
-  .pir-input{flex:1}
-  .add-btn{background:transparent;border:1px dashed #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;padding:5px;width:100%;cursor:pointer;transition:all .15s;margin-top:4px}
-  .add-btn:hover{border-color:#2dba6e;color:#2dba6e}
+.pir-item{display:flex;gap:6px;align-items:flex-start;margin-bottom:6px}
+.pir-num{color:#2dba6e;font-size:9px;font-weight:700;min-width:32px;padding-top:8px}
+.pir-inp{flex:1}
+.add-btn{background:transparent;border:1px dashed #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;padding:5px;width:100%;cursor:pointer;transition:all .15s;margin-top:4px}
+.add-btn:hover{border-color:#2dba6e;color:#2dba6e}
 
-  .toast{position:fixed;bottom:12px;right:12px;background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-size:10px;letter-spacing:1px;padding:6px 12px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100}
-  .toast.show{opacity:1}
-
-  .divider{border:none;border-top:1px solid #1e3a2e;margin:10px 0}
-
-
-  .quick-btn{background:#0d1a12;border:1px solid #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:8px 6px;cursor:pointer;transition:all .15s;text-align:center}
-  .quick-btn:hover{border-color:#2dba6e;color:#2dba6e;background:#0d2b1e}
+.scrub-status{display:none;margin-top:10px;font-size:10px;color:#4a7a5e;line-height:1.8}
+.salute-grid{display:grid;grid-template-columns:65px 1fr;gap:6px;align-items:start}
+.salute-key{color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px}
 </style>
 </head>
 <body>
@@ -81,103 +84,42 @@
 <div class="header">
   <div class="dot"></div>
   <div>
-    <div class="header-title">S2 ANALYST</div>
-    <div class="header-sub">DELTA FORCE UNIT</div>
+    <div class="header-title">J2 ANALYST</div>
+    <div class="header-sub">TF CREATURE — OPERATION PHAROH'S REACH</div>
   </div>
   <div class="dtg" id="dtg">--</div>
 </div>
 
+<div class="token-bar">
+  <span class="token-label">MIRO:</span>
+  <input id="token-input" type="password" placeholder="Paste token here...">
+  <button class="token-set-btn" onclick="setToken()">SET</button>
+  <span id="token-timer" style="color:#4a7a5e">NO TOKEN</span>
+  <a class="token-get-link" href="https://miro.com/app/settings/user-profile/apps" target="_blank">↗ GET</a>
+</div>
+
 <div class="status-bar">
-  <div class="stat">ANALYST: <b style="color:#2dba6e">ONLINE</b></div>
+  <div class="stat">ANALYST: <b>ONLINE</b></div>
   <div class="stat">BOARD: <b id="board-name">--</b></div>
   <div class="stat">OP: <b>PHAROH'S REACH</b></div>
 </div>
 
-<div style="background:#060d09;border-bottom:1px solid #1e3a2e;padding:6px 12px;display:flex;gap:6px;align-items:center">
-  <span style="color:#4a7a5e;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap">TOKEN:</span>
-  <input id="token-input" type="password" placeholder="Paste Miro token..." style="flex:1;font-size:10px;padding:4px 6px;background:#0a0c0e;border:1px solid #1e3a2e;color:#c8d0d8;font-family:'Courier New',monospace">
-  <button onclick="setToken()" style="background:#0d2b1e;border:1px solid #2dba6e;color:#2dba6e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;padding:4px 8px;cursor:pointer;white-space:nowrap">SET</button>
-  <span id="token-timer" style="color:#4a7a5e;font-size:9px;font-weight:700;letter-spacing:1px;white-space:nowrap">--:--</span>
-  <a href="https://miro.com/app/settings/user-profile/apps" target="_blank" style="color:#2dba6e;font-size:9px;font-weight:700;letter-spacing:1px;text-decoration:none;white-space:nowrap">↗ GET</a>
-</div>
-
 <div class="tabs">
-  <button class="tab active" onclick="switchTab('quick')">QUICK</button>
-  <button class="tab" onclick="switchTab('scrub')">SCRUB BOARD</button>
-  <button class="tab" onclick="switchTab('nai')">NAI SCRUB</button>
-  <button class="tab" onclick="switchTab('salute')">SALUTE</button>
-  <button class="tab" onclick="switchTab('pir')">PIR/NAI</button>
-  <button class="tab" onclick="switchTab('coa')">COA</button>
-  <button class="tab" onclick="switchTab('threat')">THREAT</button>
-  <button class="tab" onclick="switchTab('freeform')">FREE</button>
+  <button class="tab active" onclick="switchTab('quick',this)">QUICK</button>
+  <button class="tab" onclick="switchTab('scrub',this)">SCRUB BOARD</button>
+  <button class="tab" onclick="switchTab('target',this)">TARGET CARDS</button>
+  <button class="tab" onclick="switchTab('nai',this)">NAI SCRUB</button>
+  <button class="tab" onclick="switchTab('salute',this)">SALUTE</button>
+  <button class="tab" onclick="switchTab('pir',this)">PIR/NAI</button>
+  <button class="tab" onclick="switchTab('coa',this)">COA</button>
+  <button class="tab" onclick="switchTab('threat',this)">THREAT</button>
+  <button class="tab" onclick="switchTab('free',this)">FREE</button>
 </div>
 
-<!-- SCRUB BOARD TAB -->
-<div class="panel" id="panel-scrub">
-  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">
-    Pulls all sticky notes and text from your Miro board and generates a full intel assessment. Board: <b style="color:#2dba6e" id="scrub-board-name">LOADING...</b>
-  </div>
-
-  <div class="field">
-    <label class="label">SCRUB MODE</label>
-    <select id="scrub-mode">
-      <option value="full">Full Intel Picture — comprehensive assessment of all board content</option>
-      <option value="threat">Threat Summary — extract and assess all OPFOR intel</option>
-      <option value="pir">PIR Generation — generate PIRs from board content</option>
-      <option value="sitrep">SITREP — format board content as an intel SITREP</option>
-      <option value="gaps">Intel Gaps — identify what intelligence is missing</option>
-    </select>
-  </div>
-
-  <div class="field">
-    <label class="label">FOCUS AREA <span class="sublabel">(optional — filter by keyword)</span></label>
-    <input id="scrub-filter" type="text" placeholder="e.g. OPFOR, NAI-01, port, vehicles...">
-  </div>
-
-  <button class="btn" id="btn-scrub" onclick="scrubBoard(true)">SCRUB BOARD + POST ASSESSMENT ↗</button>
-  <button class="btn btn-secondary" onclick="scrubBoard(false)">SCRUB BOARD (PANEL ONLY)</button>
-
-  <div id="scrub-status" style="display:none;margin-top:10px;font-size:10px;color:#4a7a5e;line-height:1.6"></div>
-</div>
-
-<!-- NAI SCRUB TAB -->
-<div class="panel" id="panel-nai">
-  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">
-    Scrubs all RFIs and intel from the board, extracts NAI-specific information, and posts one assessment sticky per NAI back to the board.
-  </div>
-  <div class="field">
-    <label class="label">NAI FILTER <span class="sublabel">(leave blank for ALL NAIs)</span></label>
-    <input id="nai-filter" type="text" placeholder="e.g. NAI-302, NAI-301 — comma separated">
-  </div>
-  <div class="field">
-    <label class="label">ASSESSMENT FOCUS</label>
-    <select id="nai-focus">
-      <option value="full">Full Assessment — ownership, activity, gaps, recommendations</option>
-      <option value="ownership">Ownership & Prior Use Only</option>
-      <option value="threat">Threat & Activity Assessment</option>
-      <option value="gaps">Intelligence Gaps Only</option>
-      <option value="update">Status Update — what has changed</option>
-    </select>
-  </div>
-  <div class="field">
-    <label class="label">ADDITIONAL CONTEXT <span class="sublabel">(optional)</span></label>
-    <textarea id="nai-context" rows="2" placeholder="e.g. Focus on AS logistics nodes, priority is NAI-302 for direct action planning..."></textarea>
-  </div>
-  <button class="btn" onclick="scrubNAIs(true)">SCRUB RFIs + POST NAI CARDS ↗</button>
-  <button class="btn btn-secondary" onclick="scrubNAIs(false)">SCRUB RFIs (PANEL ONLY)</button>
-  <div id="nai-status" style="display:none;margin-top:10px;font-size:10px;color:#4a7a5e;line-height:1.8"></div>
-</div>
-
+<!-- QUICK -->
 <div class="panel active" id="panel-quick">
-  <div class="selection-info" id="sel-info">
-    <b>SELECTED:</b> <span id="sel-preview">--</span>
-  </div>
-
-  <div style="color:#4a7a5e;font-size:10px;margin-bottom:10px;line-height:1.5">
-    Paste intel below or leave blank to pull from the board automatically. Click an action to analyze and post to board.
-  </div>
-
-  <div class="quick-actions">
+  <div style="color:#4a7a5e;font-size:10px;margin-bottom:10px;line-height:1.5">Paste intel below or leave blank to pull from the board. Click an action to analyze.</div>
+  <div class="quick-grid">
     <button class="quick-btn" onclick="quickAction('salute_analyze')">SALUTE<br>ANALYSIS</button>
     <button class="quick-btn" onclick="quickAction('threat_assess')">THREAT<br>ASSESS</button>
     <button class="quick-btn" onclick="quickAction('coa_recommend')">COA<br>RECOMMEND</button>
@@ -185,10 +127,9 @@
     <button class="quick-btn" onclick="quickAction('pir_generate')">GEN<br>PIRs</button>
     <button class="quick-btn" onclick="quickAction('sitrep_format')">FORMAT<br>SITREP</button>
   </div>
-
   <div class="field">
-    <label class="label">OR PASTE RAW INTEL HERE</label>
-    <textarea id="quick-input" rows="5" placeholder="Paste any intel, SIGACT, field report, or observation..."></textarea>
+    <label class="label">PASTE RAW INTEL <span class="sublabel">(optional — blank = pull from board)</span></label>
+    <textarea id="quick-input" rows="5" placeholder="Paste any intel, SIGACT, field report..."></textarea>
   </div>
   <div class="field">
     <label class="label">ANALYSIS TYPE</label>
@@ -201,133 +142,153 @@
       <option value="sitrep">SITREP Format</option>
     </select>
   </div>
-  <button class="btn" onclick="runQuick()">ANALYZE + POST TO BOARD ↗</button>
-  <button class="btn btn-secondary" onclick="runQuick(false)">ANALYZE (PANEL ONLY)</button>
+  <button class="btn" onclick="runQuick()">ANALYZE ↗</button>
 </div>
 
-<!-- SALUTE TAB -->
-<div class="panel" id="panel-salute">
-  <div class="selection-info" id="sel-info-salute">
-    <b>BOARD SELECTION:</b> <span id="sel-preview-salute">--</span>
-  </div>
-
-  <div style="display:grid;grid-template-columns:65px 1fr;gap:6px;align-items:start">
-    <div style="color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px">S — SIZE</div>
-    <div class="field"><textarea id="s-size" rows="2" placeholder="e.g. Squad ~8-10 PAX"></textarea></div>
-    <div style="color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px">A — ACT</div>
-    <div class="field"><textarea id="s-activity" rows="2" placeholder="e.g. Emplacing crew-served weapons, establishing OP"></textarea></div>
-    <div style="color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px">L — LOC</div>
-    <div class="field"><textarea id="s-location" rows="2" placeholder="e.g. Grid 123456, treeline NE of OBJ ANVIL"></textarea></div>
-    <div style="color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px">U — UNIT</div>
-    <div class="field"><input id="s-unit" type="text" placeholder="e.g. CSAT motorized infantry"></div>
-    <div style="color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px">T — TIME</div>
-    <div class="field"><input id="s-time" type="text" placeholder="e.g. 141530Z or in-game time"></div>
-    <div style="color:#2dba6e;font-size:10px;font-weight:700;padding-top:8px">E — EQUIP</div>
-    <div class="field"><textarea id="s-equip" rows="2" placeholder="e.g. AK-12, PKM, T-72 in overwatch"></textarea></div>
+<!-- SCRUB BOARD -->
+<div class="panel" id="panel-scrub">
+  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">Pulls all content from the board and generates a full intel assessment. Board: <b style="color:#2dba6e" id="scrub-board-name">--</b></div>
+  <div class="field">
+    <label class="label">SCRUB MODE</label>
+    <select id="scrub-mode">
+      <option value="full">Full Intel Picture</option>
+      <option value="threat">Threat Summary</option>
+      <option value="pir">PIR Generation</option>
+      <option value="sitrep">SITREP Format</option>
+      <option value="gaps">Intel Gaps</option>
+    </select>
   </div>
   <div class="field">
+    <label class="label">FOCUS FILTER <span class="sublabel">(optional)</span></label>
+    <input id="scrub-filter" type="text" placeholder="e.g. OPFOR, NAI-301, port...">
+  </div>
+  <button class="btn" onclick="scrubBoard()">SCRUB BOARD ↗</button>
+  <div class="scrub-status" id="scrub-status"></div>
+</div>
+
+<!-- TARGET CARDS -->
+<div class="panel" id="panel-target">
+  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">Scrubs all target cards from the board and generates an assessment for each one. Auto-detects cards by TARGET NUMBER field.</div>
+  <div class="field">
+    <label class="label">TARGET FILTER <span class="sublabel">(blank = ALL targets)</span></label>
+    <input id="tgt-filter" type="text" placeholder="e.g. 26-NAI-101, 26-NAI-302 — comma separated">
+  </div>
+  <div class="field">
+    <label class="label">ASSESSMENT FOCUS</label>
+    <select id="tgt-focus">
+      <option value="full">Full Target Assessment — threat, use, occupants, recommendations</option>
+      <option value="threat">Threat Assessment Only</option>
+      <option value="targeting">Targeting Package — strike/raid suitability</option>
+      <option value="pattern">Pattern of Life Assessment</option>
+      <option value="gaps">Intelligence Gaps Only</option>
+      <option value="priority">Priority Ranking — rank all targets by threat level</option>
+    </select>
+  </div>
+  <div class="field">
+    <label class="label">COMMANDER CONTEXT <span class="sublabel">(optional)</span></label>
+    <textarea id="tgt-context" rows="2" placeholder="e.g. Planning direct action against AS C2 nodes, priority is disrupting logistics..."></textarea>
+  </div>
+  <div class="field">
+    <label class="label">OUTPUT MODE</label>
+    <select id="tgt-output">
+      <option value="individual">Individual card per target</option>
+      <option value="combined">Combined assessment — all targets in one output</option>
+      <option value="matrix">Target matrix — priority ranking table</option>
+    </select>
+  </div>
+  <button class="btn" onclick="scrubTargets()">SCRUB TARGET CARDS ↗</button>
+  <div class="scrub-status" id="tgt-status"></div>
+</div>
+
+<!-- NAI SCRUB -->
+<div class="panel" id="panel-nai">
+  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">Scrubs all RFIs and intel from the board, extracts NAI-specific information, and generates one assessment per NAI.</div>
+  <div class="field">
+    <label class="label">NAI FILTER <span class="sublabel">(blank = auto-detect ALL NAIs)</span></label>
+    <input id="nai-filter" type="text" placeholder="e.g. NAI-302, NAI-301 — comma separated">
+  </div>
+  <div class="field">
+    <label class="label">ASSESSMENT FOCUS</label>
+    <select id="nai-focus">
+      <option value="full">Full Assessment</option>
+      <option value="ownership">Ownership & Prior Use Only</option>
+      <option value="threat">Threat & Activity</option>
+      <option value="gaps">Intel Gaps Only</option>
+      <option value="update">Status Update</option>
+    </select>
+  </div>
+  <div class="field">
+    <label class="label">ADDITIONAL CONTEXT <span class="sublabel">(optional)</span></label>
+    <textarea id="nai-context" rows="2" placeholder="e.g. Focus on AS logistics nodes, priority NAI-302..."></textarea>
+  </div>
+  <button class="btn" onclick="scrubNAIs()">SCRUB + GENERATE NAI CARDS ↗</button>
+  <div class="scrub-status" id="nai-status"></div>
+</div>
+
+<!-- SALUTE -->
+<div class="panel" id="panel-salute">
+  <div class="salute-grid">
+    <div class="salute-key">S — SIZE</div><div class="field"><textarea id="s-size" rows="2" placeholder="e.g. Squad ~8-10 PAX"></textarea></div>
+    <div class="salute-key">A — ACT</div><div class="field"><textarea id="s-activity" rows="2" placeholder="e.g. Emplacing crew-served weapons"></textarea></div>
+    <div class="salute-key">L — LOC</div><div class="field"><textarea id="s-location" rows="2" placeholder="e.g. Grid 123456, treeline NE of OBJ ANVIL"></textarea></div>
+    <div class="salute-key">U — UNIT</div><div class="field"><input id="s-unit" type="text" placeholder="e.g. CSAT motorized infantry"></div>
+    <div class="salute-key">T — TIME</div><div class="field"><input id="s-time" type="text" placeholder="e.g. 141530Z"></div>
+    <div class="salute-key">E — EQUIP</div><div class="field"><textarea id="s-equip" rows="2" placeholder="e.g. AK-12, PKM, T-72 in overwatch"></textarea></div>
+  </div>
+  <div class="field" style="margin-top:6px">
     <label class="label">CONTEXT <span class="sublabel">(optional)</span></label>
     <textarea id="s-context" rows="2" placeholder="Friendly positions, mission phase..."></textarea>
   </div>
-  <button class="btn" onclick="runAnalysis('salute', true)">ANALYZE + POST TO BOARD ↗</button>
-  <button class="btn btn-secondary" onclick="runAnalysis('salute', false)">ANALYZE (PANEL ONLY)</button>
+  <button class="btn" onclick="runAnalysis('salute')">ANALYZE SALUTE ↗</button>
 </div>
 
-<!-- PIR TAB -->
+<!-- PIR -->
 <div class="panel" id="panel-pir">
+  <div class="field"><label class="label">OPERATION</label><input id="pir-op" type="text" placeholder="e.g. OP PHAROH'S REACH"></div>
+  <div class="field"><label class="label">AO</label><textarea id="pir-ao" rows="2" placeholder="Terrain, OPFOR occupation, key terrain..."></textarea></div>
+  <div class="field"><label class="label">COMMANDER'S INTENT</label><textarea id="pir-intent" rows="2" placeholder="Objective, constraints, end state..."></textarea></div>
   <div class="field">
-    <label class="label">OPERATION NAME</label>
-    <input id="pir-op" type="text" placeholder="e.g. OP STEEL HAMMER">
-  </div>
-  <div class="field">
-    <label class="label">AO DESCRIPTION</label>
-    <textarea id="pir-ao" rows="2" placeholder="Terrain, OPFOR occupation, key terrain..."></textarea>
-  </div>
-  <div class="field">
-    <label class="label">COMMANDER'S INTENT</label>
-    <textarea id="pir-intent" rows="2" placeholder="Objective, constraints, end state..."></textarea>
-  </div>
-  <div class="field">
-    <label class="label">PRIORITY INTELLIGENCE REQUIREMENTS</label>
+    <label class="label">PIRs</label>
     <div id="pir-list">
-      <div class="pir-item"><div class="pir-num">PIR 1</div><div class="pir-input"><input type="text" placeholder="e.g. OPFOR QRF location and reaction time"></div></div>
-      <div class="pir-item"><div class="pir-num">PIR 2</div><div class="pir-input"><input type="text" placeholder="e.g. Enemy C2 node location"></div></div>
-      <div class="pir-item"><div class="pir-num">PIR 3</div><div class="pir-input"><input type="text" placeholder="e.g. Air defense assets in AO"></div></div>
+      <div class="pir-item"><div class="pir-num">PIR 1</div><div class="pir-inp"><input type="text" placeholder="e.g. OPFOR QRF location and reaction time"></div></div>
+      <div class="pir-item"><div class="pir-num">PIR 2</div><div class="pir-inp"><input type="text" placeholder="e.g. Enemy C2 node location"></div></div>
+      <div class="pir-item"><div class="pir-num">PIR 3</div><div class="pir-inp"><input type="text" placeholder="e.g. Air defense assets in AO"></div></div>
     </div>
     <button class="add-btn" onclick="addPIR()">+ ADD PIR</button>
   </div>
-  <div class="field">
-    <label class="label">NAIs TO MONITOR</label>
-    <textarea id="pir-nai" rows="3" placeholder="NAI-01 — Northern road junction&#10;NAI-02 — Port warehouse district"></textarea>
-  </div>
-  <button class="btn" onclick="runAnalysis('pir', true)">GENERATE + POST TO BOARD ↗</button>
-  <button class="btn btn-secondary" onclick="runAnalysis('pir', false)">GENERATE (PANEL ONLY)</button>
+  <div class="field"><label class="label">NAIs</label><textarea id="pir-nai" rows="3" placeholder="NAI-101 — Banana Farm&#10;NAI-302 — Forechira Mansion"></textarea></div>
+  <button class="btn" onclick="runAnalysis('pir')">GENERATE PIR/NAI ASSESSMENT ↗</button>
 </div>
 
-<!-- COA TAB -->
+<!-- COA -->
 <div class="panel" id="panel-coa">
   <div class="grid2">
-    <div class="field">
-      <label class="label">FRIENDLY FORCE</label>
-      <textarea id="coa-friendly" rows="3" placeholder="Size, composition, capabilities..."></textarea>
-    </div>
-    <div class="field">
-      <label class="label">OPFOR</label>
-      <textarea id="coa-opfor" rows="3" placeholder="Size, weapons, posture..."></textarea>
-    </div>
+    <div class="field"><label class="label">FRIENDLY FORCE</label><textarea id="coa-friendly" rows="3" placeholder="Size, composition, capabilities..."></textarea></div>
+    <div class="field"><label class="label">OPFOR</label><textarea id="coa-opfor" rows="3" placeholder="Size, weapons, posture..."></textarea></div>
   </div>
-  <div class="field">
-    <label class="label">TERRAIN / WEATHER</label>
-    <textarea id="coa-terrain" rows="2" placeholder="Key terrain, visibility, cover, obstacles..."></textarea>
-  </div>
-  <div class="field">
-    <label class="label">MISSION</label>
-    <textarea id="coa-mission" rows="2" placeholder="Objective and time constraints..."></textarea>
-  </div>
-  <div class="field">
-    <label class="label">PROPOSED COAs</label>
-    <textarea id="coa-proposed" rows="4" placeholder="COA 1: Direct assault north via main road&#10;COA 2: Infiltration eastern woods, flank&#10;COA 3: HELO assault to rooftop LZ"></textarea>
-  </div>
-  <button class="btn" onclick="runAnalysis('coa', true)">ANALYZE + POST TO BOARD ↗</button>
-  <button class="btn btn-secondary" onclick="runAnalysis('coa', false)">ANALYZE (PANEL ONLY)</button>
+  <div class="field"><label class="label">TERRAIN / WEATHER</label><textarea id="coa-terrain" rows="2" placeholder="Key terrain, visibility, cover, obstacles..."></textarea></div>
+  <div class="field"><label class="label">MISSION</label><textarea id="coa-mission" rows="2" placeholder="Objective and time constraints..."></textarea></div>
+  <div class="field"><label class="label">PROPOSED COAs</label><textarea id="coa-proposed" rows="4" placeholder="COA 1: Direct assault north&#10;COA 2: Infiltration eastern woods&#10;COA 3: HELO assault to rooftop LZ"></textarea></div>
+  <button class="btn" onclick="runAnalysis('coa')">ANALYZE COAs ↗</button>
 </div>
 
-<!-- THREAT TAB -->
+<!-- THREAT -->
 <div class="panel" id="panel-threat">
   <div class="grid2">
-    <div class="field">
-      <label class="label">AO / MAP</label>
-      <input id="thr-ao" type="text" placeholder="e.g. Altis, Takistan">
-    </div>
-    <div class="field">
-      <label class="label">OPFOR FACTION</label>
-      <input id="thr-faction" type="text" placeholder="e.g. CSAT, AAF">
-    </div>
+    <div class="field"><label class="label">AO / MAP</label><input id="thr-ao" type="text" placeholder="e.g. Southern Jubaland"></div>
+    <div class="field"><label class="label">OPFOR FACTION</label><input id="thr-faction" type="text" placeholder="e.g. Al-Shabaab"></div>
   </div>
-  <div class="field">
-    <label class="label">KNOWN ASSETS</label>
-    <textarea id="thr-assets" rows="3" placeholder="Vehicles, crew-served, air assets, fortifications..."></textarea>
-  </div>
-  <div class="field">
-    <label class="label">OBSERVED TTPs</label>
-    <textarea id="thr-ttps" rows="3" placeholder="Patrol patterns, response times, use of terrain..."></textarea>
-  </div>
-  <div class="field">
-    <label class="label">FRIENDLY VULNERABILITIES</label>
-    <textarea id="thr-vuln" rows="2" placeholder="Gaps, limited assets, time constraints..."></textarea>
-  </div>
-  <button class="btn" onclick="runAnalysis('threat', true)">ASSESS + POST TO BOARD ↗</button>
-  <button class="btn btn-secondary" onclick="runAnalysis('threat', false)">ASSESS (PANEL ONLY)</button>
+  <div class="field"><label class="label">KNOWN ASSETS</label><textarea id="thr-assets" rows="3" placeholder="Vehicles, crew-served, air assets, fortifications..."></textarea></div>
+  <div class="field"><label class="label">OBSERVED TTPs</label><textarea id="thr-ttps" rows="3" placeholder="Patrol patterns, response times, use of terrain..."></textarea></div>
+  <div class="field"><label class="label">FRIENDLY VULNERABILITIES</label><textarea id="thr-vuln" rows="2" placeholder="Gaps, limited assets, time constraints..."></textarea></div>
+  <button class="btn" onclick="runAnalysis('threat')">GENERATE THREAT ASSESSMENT ↗</button>
 </div>
 
-<!-- FREEFORM TAB -->
-<div class="panel" id="panel-freeform">
-  <div class="selection-info" id="sel-info-free">
-    <b>BOARD SELECTION:</b> <span id="sel-preview-free">--</span>
-  </div>
+<!-- FREE -->
+<div class="panel" id="panel-free">
   <div class="field">
     <label class="label">ANALYST TASKING</label>
-    <textarea id="free-input" rows="8" placeholder="Describe what you need analyzed. Examples:&#10;&#10;— Raid assessment for compound at grid 445600&#10;— Pattern of life for OPFOR patrol route [description]&#10;— Write intel annex for OP NIGHTFALL&#10;— After-action intel summary: [paste AAR]"></textarea>
+    <textarea id="free-input" rows="10" placeholder="Describe what you need analyzed...&#10;&#10;Examples:&#10;— Raid assessment for compound at grid 445600&#10;— Pattern of life for OPFOR patrol route&#10;— Write intel annex for OP PHAROH'S REACH&#10;— After-action intel summary: [paste AAR]"></textarea>
   </div>
   <div class="field">
     <label class="label">OUTPUT FORMAT</label>
@@ -337,175 +298,63 @@
       <option value="narrative">Narrative</option>
       <option value="annex">OPORD Intel Annex</option>
       <option value="brevity">Brevity (radio-ready)</option>
+      <option value="rfi">RFI Format</option>
     </select>
   </div>
-  <button class="btn" onclick="runAnalysis('freeform', true)">ANALYZE + POST TO BOARD ↗</button>
-  <button class="btn btn-secondary" onclick="runAnalysis('freeform', false)">ANALYZE (PANEL ONLY)</button>
+  <button class="btn" onclick="runAnalysis('free')">SUBMIT FOR ANALYSIS ↗</button>
 </div>
 
 <!-- OUTPUT -->
-<div class="output" id="output-box">
+<div class="output-box" id="output-box">
   <div class="output-header">
     <div class="output-label" id="output-label">ANALYST OUTPUT</div>
-    <div class="output-actions">
-      <button class="mini-btn" onclick="copyOutput()">COPY</button>
-      <button class="mini-btn" onclick="postToBoard()">POST TO BOARD</button>
-    </div>
+    <button class="mini-btn" onclick="copyOutput()">COPY</button>
   </div>
   <div class="output-text" id="output-text"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
 <script>
-let lastOutput = '';
+const WORKER = 'https://orange-moon-c3be.donald-caribbean1.workers.dev';
+const BOARD_ID = 'uXjVI0qw29Q=';
+let MIRO_TOKEN = '';
+let tokenExpiry = null;
+let timerInterval = null;
 let pirCount = 3;
-let selectedContent = '';
-let selectedItemId = null;
-let boardConnected = false;
+let lastOutput = '';
 
 // DTG
 function updateDTG() {
-  const now = new Date();
-  const d = String(now.getUTCDate()).padStart(2,'0');
-  const h = String(now.getUTCHours()).padStart(2,'0');
-  const m = String(now.getUTCMinutes()).padStart(2,'0');
+  const n = new Date();
   const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  document.getElementById('dtg').textContent = d+h+m+'Z'+months[now.getUTCMonth()]+String(now.getUTCFullYear()).slice(2);
+  document.getElementById('dtg').textContent = String(n.getUTCDate()).padStart(2,'0') + String(n.getUTCHours()).padStart(2,'0') + String(n.getUTCMinutes()).padStart(2,'0') + 'Z' + months[n.getUTCMonth()] + String(n.getUTCFullYear()).slice(2);
 }
-updateDTG();
-setInterval(updateDTG, 60000);
+updateDTG(); setInterval(updateDTG, 60000);
 
 // Toast
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Tab switching
-function switchTab(id) {
+// Tabs
+function switchTab(id, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  event.target.classList.add('active');
+  el.classList.add('active');
   document.getElementById('panel-' + id).classList.add('active');
 }
 
 function addPIR() {
   pirCount++;
-  const list = document.getElementById('pir-list');
-  const div = document.createElement('div');
-  div.className = 'pir-item';
-  div.innerHTML = `<div class="pir-num">PIR ${pirCount}</div><div class="pir-input"><input type="text" placeholder="Enter PIR..."></div>`;
-  list.appendChild(div);
+  const d = document.createElement('div'); d.className = 'pir-item';
+  d.innerHTML = `<div class="pir-num">PIR ${pirCount}</div><div class="pir-inp"><input type="text" placeholder="Enter PIR..."></div>`;
+  document.getElementById('pir-list').appendChild(d);
 }
 
-// Miro init
-async function initMiro() {
-  try {
-    // Register panel entry point so app appears in Miro sidebar
-    await miro.board.ui.on('icon:click', async () => {
-      await miro.board.ui.openPanel({ url: window.location.href });
-    });
-
-    await miro.board.getInfo().then(info => {
-      document.getElementById('board-name').textContent = info.name.substring(0,12).toUpperCase();
-      boardConnected = true;
-    });
-
-    // Listen for selection changes
-    miro.board.ui.on('selection:update', async (event) => {
-      const items = await miro.board.getSelection();
-      document.getElementById('sel-count').textContent = items.length;
-      if (items.length > 0) {
-        const item = items[0];
-        const content = getItemText(item);
-        selectedContent = content;
-        selectedItemId = item.id;
-        const preview = content.substring(0, 60) + (content.length > 60 ? '...' : '');
-        ['sel-info','sel-info-salute','sel-info-free'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.style.display = 'block';
-        });
-        ['sel-preview','sel-preview-salute','sel-preview-free'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.textContent = preview || '(empty item)';
-        });
-      } else {
-        selectedContent = '';
-        selectedItemId = null;
-        ['sel-info','sel-info-salute','sel-info-free'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.style.display = 'none';
-        });
-        document.getElementById('sel-count').textContent = '0';
-      }
-    });
-
-  } catch(e) {
-    document.getElementById('api-status').textContent = 'OFFLINE';
-    document.getElementById('board-name').textContent = 'NO BOARD';
-  }
-}
-
-function getItemText(item) {
-  if (item.type === 'sticky_note') return item.content || '';
-  if (item.type === 'text') return item.content || '';
-  if (item.type === 'shape') return item.content || '';
-  if (item.type === 'card') return (item.title || '') + ' ' + (item.description || '');
-  if (item.type === 'frame') return item.title || '';
-  return '';
-}
-
-// Post result to Miro board as a sticky note
-async function postToBoard(text) {
-  const content = text || lastOutput;
-  if (!content) { showToast('NOTHING TO POST'); return; }
-  if (!boardConnected) { showToast('BOARD NOT CONNECTED'); return; }
-
-  try {
-    // Get viewport center to place the sticky
-    const viewport = await miro.board.viewport.get();
-    const x = viewport.x + viewport.width / 2 + 400;
-    const y = viewport.y + viewport.height / 2;
-
-    // Truncate to Miro sticky note limit (6000 chars)
-    const truncated = content.substring(0, 5800);
-
-    await miro.board.createStickyNote({
-      content: truncated,
-      style: {
-        fillColor: '#1d2b1f',
-        textAlign: 'left',
-        textAlignVertical: 'top',
-        fontSize: 14,
-      },
-      x: x,
-      y: y,
-      width: 600,
-    });
-
-    showToast('POSTED TO BOARD');
-  } catch(e) {
-    showToast('POST FAILED: ' + e.message);
-    console.error(e);
-  }
-}
-
-function copyOutput() {
-  navigator.clipboard.writeText(lastOutput).then(() => showToast('COPIED'));
-}
-
-// Build prompts
-let MIRO_TOKEN = '';
-const MIRO_BOARD_ID = 'uXjVI0qw29Q=';
-const WORKER_URL = 'https://orange-moon-c3be.donald-caribbean1.workers.dev';
-
-let tokenExpiry = null;
-let timerInterval = null;
-
+// Token management
 function setToken() {
   const val = document.getElementById('token-input').value.trim();
   if (!val || val.length < 10) { showToast('INVALID TOKEN'); return; }
@@ -522,439 +371,347 @@ function startTimer() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     if (!tokenExpiry) return;
-    const remaining = tokenExpiry - Date.now();
-    if (remaining <= 0) {
-      document.getElementById('token-timer').textContent = 'EXPIRED';
-      document.getElementById('token-timer').style.color = '#e87c3e';
-      clearInterval(timerInterval);
-      return;
-    }
-    const mins = Math.floor(remaining / 60000);
-    const secs = Math.floor((remaining % 60000) / 1000);
+    const rem = tokenExpiry - Date.now();
     const el = document.getElementById('token-timer');
-    el.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
-    el.style.color = remaining < 5 * 60 * 1000 ? '#e87c3e' : '#2dba6e';
+    if (rem <= 0) {
+      el.textContent = 'EXPIRED'; el.style.color = '#e87c3e';
+      clearInterval(timerInterval); return;
+    }
+    const m = Math.floor(rem / 60000);
+    const s = Math.floor((rem % 60000) / 1000);
+    el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    el.style.color = rem < 5 * 60 * 1000 ? '#e87c3e' : '#2dba6e';
+    if (rem < 5 * 60 * 1000 && s === 0) showToast('⚠ TOKEN EXPIRES IN ' + m + ' MIN — GET NEW TOKEN');
   }, 1000);
 }
 
-// Restore token from localStorage on load
-(function restoreToken() {
+// Board name
+async function loadBoardName() {
+  if (!MIRO_TOKEN) return;
+  try {
+    const r = await fetch(`https://api.miro.com/v2/boards/${encodeURIComponent(BOARD_ID)}`, {
+      headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+    });
+    const d = await r.json();
+    const name = (d.name || 'UNKNOWN').toUpperCase();
+    document.getElementById('board-name').textContent = name;
+    document.getElementById('scrub-board-name').textContent = name;
+  } catch(e) {}
+}
+
+// Restore token from localStorage
+(function() {
   const saved = localStorage.getItem('miro_token');
-  const expiry = parseInt(localStorage.getItem('miro_expiry') || '0');
-  if (saved && expiry > Date.now()) {
-    MIRO_TOKEN = saved;
-    tokenExpiry = expiry;
+  const exp = parseInt(localStorage.getItem('miro_expiry') || '0');
+  if (saved && exp > Date.now()) {
+    MIRO_TOKEN = saved; tokenExpiry = exp;
     document.getElementById('token-input').value = saved;
-    startTimer();
-    loadBoardName();
-  } else {
-    document.getElementById('token-timer').textContent = 'NO TOKEN';
+    startTimer(); loadBoardName();
   }
 })();
 
-async function scrubNAIs(postBoard = true) {
-  const status = document.getElementById('nai-status');
-  status.style.display = 'block';
-  status.textContent = '[ CONNECTING TO BOARD... ]';
-  setLoading(true);
+// Copy output
+function copyOutput() {
+  navigator.clipboard.writeText(lastOutput).then(() => showToast('COPIED'));
+}
 
-  try {
-    // Pull all board content — fetch all item types including frame children
-    let allContent = [];
-    let frameIds = [];
+function setLoading(v) {
+  document.querySelectorAll('.btn').forEach(b => b.disabled = v);
+}
 
-    async function fetchItems(url) {
-      let cursor = null;
-      let page = 0;
-      do {
-        const fullUrl = url + (cursor ? `&cursor=${cursor}` : '');
-        const resp = await fetch(fullUrl, {
-          headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
-        });
-        if (!resp.ok) throw new Error(`Miro API error: ${resp.status}`);
-        const data = await resp.json();
-        (data.data || []).forEach(item => {
-          let text = '';
-          if (item.type === 'sticky_note') text = item.data?.content || '';
-          else if (item.type === 'text') text = item.data?.content || '';
-          else if (item.type === 'shape') text = item.data?.content || '';
-          else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
-          else if (item.type === 'frame') {
-            text = item.data?.title || '';
-            frameIds.push(item.id);
-          }
-          text = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').trim();
-          if (text.length > 1) allContent.push(text);
-        });
-        cursor = data.cursor || null;
-        page++;
-        status.textContent = `[ PULLING BOARD DATA... ${allContent.length} ITEMS ]`;
-      } while (cursor && page < 100);
-    }
+function showOutput(text, label) {
+  lastOutput = text;
+  document.getElementById('output-box').style.display = 'block';
+  document.getElementById('output-label').textContent = label || 'ANALYST OUTPUT';
+  document.getElementById('output-text').textContent = text;
+  document.getElementById('output-box').scrollIntoView({ behavior: 'smooth' });
+}
 
-    // Fetch all items
-    await fetchItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50`);
+// Claude API
+const SYSTEM = `You are an intelligence analyst embedded with a Delta Force special operations unit conducting operations against Al-Shabaab in Somalia as part of OPERATION PHAROH'S REACH. Produce professional, realistic military intelligence analysis using proper military formats, brevity codes, and terminology. Be concise, tactical, and operationally relevant. No disclaimers. Output as if it's a real classified document.`;
 
-    // Also fetch children of each frame to get text inside grouped target cards
-    for (const frameId of frameIds.slice(0, 30)) {
-      try {
-        await fetchItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/frames/${frameId}/items?limit=50`);
-      } catch(e) { /* skip frames we can't read */ }
-    }
+async function callClaude(prompt) {
+  const r = await fetch(WORKER, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4000, system: SYSTEM, messages: [{ role: 'user', content: prompt }] })
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || 'API error');
+  return d.content?.map(b => b.text || '').join('\n') || 'No response.';
+}
 
-    if (allContent.length === 0) throw new Error('No content found on board.');
+// Board scraping
+async function fetchBoardContent(filter) {
+  if (!MIRO_TOKEN) throw new Error('No token — paste a Miro token first');
+  let all = []; let frameIds = [];
 
-
-    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — DETECTING NAIs... ]`;
-
-    // Detect NAIs from filter or auto-detect
-    const filterInput = document.getElementById('nai-filter').value.trim();
-    let naiList = [];
-    if (filterInput) {
-      naiList = filterInput.split(',').map(n => n.trim().toUpperCase()).filter(Boolean);
-    } else {
-      // Auto-detect NAI designations — catch NAI-101, NAI 101, NAI101, nai-101 etc
-      const combined = allContent.join(' ');
-      const matches = [...new Set([...combined.matchAll(/NAI[-\s]?(\d+)/gi)].map(m => `NAI-${m[1]}`))];
-      // Sort numerically
-      matches.sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
-      naiList = matches.length > 0 ? matches : ['ALL NAIs'];
-      status.textContent = `[ DETECTED ${naiList.length} NAIs: ${naiList.join(', ')} ]`;
-      await new Promise(r => setTimeout(r, 1500));
-    }
-
-    const focus = document.getElementById('nai-focus').value;
-    const context = document.getElementById('nai-context').value;
-    const focusPrompts = {
-      full: 'Produce a full intelligence assessment covering: (1) confirmed identity and ownership, (2) historical and current use, (3) threat activity and AS involvement, (4) intelligence gaps, (5) recommended actions.',
-      ownership: 'Focus exclusively on: (1) pre-AS ownership — who owned it, their background, clan/family affiliation, (2) historical use of the facility before AS seizure, (3) circumstances of AS takeover.',
-      threat: 'Focus on: (1) current AS activity and use, (2) threat level assessment, (3) most likely and most dangerous COA, (4) recommended targeting or monitoring posture.',
-      gaps: 'Identify all critical intelligence gaps for this NAI — what is unknown, what collection is needed, and what PIRs remain unanswered.',
-      update: 'Produce a status update assessment — what has changed, what is confirmed new, what requires follow-up collection.'
-    };
-
-    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — GENERATING ${naiList.length} NAI CARD(S)... ]`;
-
-    const boardText = allContent.join('\n\n');
-    let successCount = 0;
-    let outputAll = '';
-
-    for (let i = 0; i < naiList.length; i++) {
-      const nai = naiList[i];
-      status.textContent = `[ ANALYZING ${nai} (${i+1}/${naiList.length})... ]`;
-
-      const prompt = `You are JTF NOMAD J2 intelligence analyst. Analyze all available board reporting and produce a formatted NAI assessment card for ${nai}.
-
-${focusPrompts[focus]}
-
-${context ? `COMMANDER CONTEXT: ${context}\n` : ''}
-Format the output as:
-NAI DESIGNATION: ${nai}
-DTG: [current]
-CLASSIFICATION: SECRET // NOFORN
----
-[Your structured assessment here]
----
-CONFIDENCE: [LOW/MODERATE/HIGH]
-COLLECTION GAPS: [list gaps]
-RECOMMENDED ACTION: [specific recommendation]
-
-BOARD REPORTING (${allContent.length} items):
-${boardText}`;
-
-      const result = await callClaude(prompt);
-      outputAll += `\n\n${'='.repeat(60)}\n${result}`;
-
-      if (postBoard) {
-        try {
-          const viewport = await miro.board.viewport.get();
-          const x = viewport.x + viewport.width / 2 + 400 + (i * 650);
-          const y = viewport.y + viewport.height / 2;
-          await miro.board.createStickyNote({
-            content: result.substring(0, 5800),
-            style: { fillColor: '#1d2b1f', textAlign: 'left', textAlignVertical: 'top', fontSize: 13 },
-            x, y, width: 600,
-          });
-          successCount++;
-        } catch(e) {
-          status.textContent += `\n[ FAILED TO POST ${nai}: ${e.message} ]`;
-        }
-      }
-    }
-
-    showOutput(outputAll.trim(), `NAI SCRUB — ${naiList.length} NAI(s)`);
-    status.textContent = postBoard
-      ? `[ COMPLETE — ${naiList.length} NAIs ANALYZED, ${successCount} POSTED TO BOARD ]`
-      : `[ COMPLETE — ${naiList.length} NAIs ANALYZED ]`;
-
-  } catch(e) {
-    showOutput('NAI SCRUB ERROR: ' + e.message, 'ERROR');
-    status.textContent = '[ ERROR: ' + e.message + ' ]';
+  async function fetchPage(url) {
+    let cursor = null; let page = 0;
+    do {
+      const r = await fetch(url + (cursor ? `&cursor=${cursor}` : ''), {
+        headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+      });
+      if (!r.ok) throw new Error(`Miro API ${r.status}`);
+      const d = await r.json();
+      (d.data || []).forEach(item => {
+        let t = '';
+        if (item.type === 'sticky_note') t = item.data?.content || '';
+        else if (item.type === 'text') t = item.data?.content || '';
+        else if (item.type === 'shape') t = item.data?.content || '';
+        else if (item.type === 'card') t = `${item.data?.title||''} ${item.data?.description||''}`.trim();
+        else if (item.type === 'frame') { t = item.data?.title || ''; frameIds.push(item.id); }
+        t = t.replace(/<[^>]*>/g,'').replace(/&nbsp;/g,' ').trim();
+        if (t.length > 2 && (!filter || t.toLowerCase().includes(filter.toLowerCase()))) all.push(t);
+      });
+      cursor = d.cursor || null; page++;
+    } while (cursor && page < 100);
   }
 
+  await fetchPage(`https://api.miro.com/v2/boards/${encodeURIComponent(BOARD_ID)}/items?limit=50`);
+  for (const fid of frameIds.slice(0,30)) {
+    try { await fetchPage(`https://api.miro.com/v2/boards/${encodeURIComponent(BOARD_ID)}/frames/${fid}/items?limit=50`); } catch(e) {}
+  }
+
+  // Deduplicate
+  const seen = new Set();
+  return all.filter(t => { const k = t.toLowerCase().trim(); if(seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// Quick actions
+const quickPrompts = {
+  salute_analyze: c => `Analyze as a SALUTE report. Extract S/A/L/U/T/E elements. Produce: formatted SALUTE block, threat assessment, recommended actions.\n\nINPUT:\n${c}`,
+  threat_assess: c => `Generate a threat assessment. Include capabilities, TTPs, most likely/dangerous COA, recommended mitigations.\n\nINPUT:\n${c}`,
+  coa_recommend: c => `Analyze and recommend the best COA. Include: situation assessment, COA options, recommendation with justification, risk factors.\n\nINPUT:\n${c}`,
+  intel_summary: c => `Produce a concise intelligence summary. Format: classification header, key facts, assessment, recommendations.\n\nINPUT:\n${c}`,
+  pir_generate: c => `Generate Priority Intelligence Requirements (PIRs) with indicators and NAI recommendations.\n\nINPUT:\n${c}`,
+  sitrep_format: c => `Format as a proper military SITREP: situation, enemy, friendly, assessment, outlook.\n\nINPUT:\n${c}`,
+  auto: c => `Analyze this intel and produce a professional military intelligence assessment:\n\n${c}`
+};
+
+async function quickAction(action) {
+  let content = document.getElementById('quick-input').value.trim();
+  if (!content) {
+    showOutput('⬛ PULLING BOARD CONTENT...', action.replace('_',' ').toUpperCase());
+    setLoading(true);
+    try {
+      const items = await fetchBoardContent('');
+      content = items.join('\n\n').substring(0, 8000);
+    } catch(e) { showOutput('ERROR: ' + e.message, 'ERROR'); setLoading(false); return; }
+  }
+  if (!content.trim()) { showToast('NO CONTENT FOUND'); setLoading(false); return; }
+  setLoading(true);
+  showOutput('⬛ ANALYST PROCESSING...', action.replace('_',' ').toUpperCase());
+  try {
+    const result = await callClaude((quickPrompts[action] || quickPrompts.auto)(content));
+    showOutput(result, action.replace('_',' ').toUpperCase());
+  } catch(e) { showOutput('ERROR: ' + e.message, 'ERROR'); }
   setLoading(false);
 }
 
-
-async function loadBoardName() {
+async function runQuick() {
+  const input = document.getElementById('quick-input').value.trim();
+  if (!input) { showToast('PASTE INTEL FIRST'); return; }
+  const type = document.getElementById('quick-type').value;
+  setLoading(true);
+  showOutput('⬛ ANALYST PROCESSING...', 'QUICK ANALYSIS');
   try {
-    const resp = await fetch(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}`, {
-      headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
-    });
-    const data = await resp.json();
-    const name = data.name || 'UNKNOWN BOARD';
-    const el = document.getElementById('scrub-board-name');
-    if (el) el.textContent = name.toUpperCase();
-  } catch(e) {
-    const el = document.getElementById('scrub-board-name');
-    if (el) el.textContent = 'ERROR FETCHING BOARD';
-  }
+    const result = await callClaude((quickPrompts[type] || quickPrompts.auto)(input));
+    showOutput(result, 'ANALYST OUTPUT');
+  } catch(e) { showOutput('ERROR: ' + e.message, 'ERROR'); }
+  setLoading(false);
 }
-loadBoardName();
 
-async function scrubBoard(postBoard = true) {
+// Structured analysis
+async function runAnalysis(type) {
+  const dtg = document.getElementById('dtg').textContent;
+  let prompt = '';
+  if (type === 'salute') {
+    prompt = `DTG: ${dtg}\nAnalyze this SALUTE report: (1) formatted SALUTE block, (2) threat assessment, (3) recommended immediate actions, (4) follow-on intel tasks.\nS: ${document.getElementById('s-size').value}\nA: ${document.getElementById('s-activity').value}\nL: ${document.getElementById('s-location').value}\nU: ${document.getElementById('s-unit').value}\nT: ${document.getElementById('s-time').value}\nE: ${document.getElementById('s-equip').value}\nCONTEXT: ${document.getElementById('s-context').value||'None'}`;
+  } else if (type === 'pir') {
+    const pirs = [...document.querySelectorAll('#pir-list input')].map((el,i) => `PIR ${i+1}: ${el.value}`).filter(p => !p.endsWith(': ')).join('\n');
+    prompt = `Generate PIR/NAI assessment: (1) refined PIRs with indicators, (2) NAI assessment with collection recommendations, (3) OPFOR most likely and most dangerous COA.\nOP: ${document.getElementById('pir-op').value}\nAO: ${document.getElementById('pir-ao').value}\nINTENT: ${document.getElementById('pir-intent').value}\nPIRs:\n${pirs}\nNAIs:\n${document.getElementById('pir-nai').value}`;
+  } else if (type === 'coa') {
+    prompt = `COA analysis from intel perspective. For each COA: (1) OPFOR most likely response, (2) intel gaps, (3) vulnerability assessment, (4) recommended COA with justification.\nFRIENDLY: ${document.getElementById('coa-friendly').value}\nOPFOR: ${document.getElementById('coa-opfor').value}\nTERRAIN: ${document.getElementById('coa-terrain').value}\nMISSION: ${document.getElementById('coa-mission').value}\nCOAs:\n${document.getElementById('coa-proposed').value}`;
+  } else if (type === 'threat') {
+    prompt = `Threat assessment: (1) OPFOR capabilities, (2) TTPs, (3) most likely COA, (4) most dangerous COA, (5) threat matrix, (6) recommended mitigations.\nAO: ${document.getElementById('thr-ao').value}\nFACTION: ${document.getElementById('thr-faction').value}\nASSETS: ${document.getElementById('thr-assets').value}\nTTPs: ${document.getElementById('thr-ttps').value}\nFRIENDLY VULN: ${document.getElementById('thr-vuln').value}`;
+  } else if (type === 'free') {
+    const fmt = document.getElementById('free-format').value;
+    prompt = document.getElementById('free-input').value + (fmt ? `\n\nFORMAT: ${fmt}` : '');
+  }
+  if (!prompt.trim() || prompt.length < 20) { showToast('FILL IN REQUIRED FIELDS'); return; }
+  setLoading(true);
+  const labels = { salute:'SALUTE ANALYSIS', pir:'PIR/NAI ASSESSMENT', coa:'COA ANALYSIS', threat:'THREAT ASSESSMENT', free:'ANALYST OUTPUT' };
+  showOutput('⬛ ANALYST PROCESSING...', labels[type]);
+  try {
+    const result = await callClaude(prompt);
+    showOutput(result, labels[type]);
+  } catch(e) { showOutput('ERROR: ' + e.message, 'ERROR'); }
+  setLoading(false);
+}
+
+// Target card scrubber
+async function scrubTargets() {
+  const status = document.getElementById('tgt-status');
+  status.style.display = 'block';
+  status.textContent = '[ CONNECTING TO BOARD... ]';
+  setLoading(true);
+  try {
+    status.textContent = '[ PULLING BOARD DATA... ]';
+    const items = await fetchBoardContent('');
+    status.textContent = `[ ${items.length} ITEMS SCRAPED — DETECTING TARGETS... ]`;
+
+    const combined = items.join(' ');
+
+    // Auto-detect target numbers — catches 26-NAI-101, NAI-101, etc
+    const filterInput = document.getElementById('tgt-filter').value.trim();
+    let targetList = [];
+    if (filterInput) {
+      targetList = filterInput.split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
+    } else {
+      const matches = [...new Set([
+        ...[...combined.matchAll(/\d+[-\s]NAI[-\s](\d+)/gi)].map(m => `NAI-${m[1]}`),
+        ...[...combined.matchAll(/TARGET\s+NUMBER[:\s]+([A-Z0-9\-]+)/gi)].map(m => m[1].trim()),
+        ...[...combined.matchAll(/ROMANS\s*[-–]\s*(NAI[-\s]?\d+)/gi)].map(m => m[1].trim().replace(/\s/,'-').toUpperCase()),
+      ])];
+      matches.sort((a,b) => {
+        const na = parseInt(a.replace(/\D/g,''));
+        const nb = parseInt(b.replace(/\D/g,''));
+        return na - nb;
+      });
+      targetList = matches.length > 0 ? matches : ['ALL TARGETS'];
+    }
+
+    status.textContent = `[ DETECTED ${targetList.length} TARGETS: ${targetList.slice(0,5).join(', ')}${targetList.length > 5 ? '...' : ''} ]`;
+    await new Promise(r => setTimeout(r, 1000));
+
+    const focus = document.getElementById('tgt-focus').value;
+    const context = document.getElementById('tgt-context').value;
+    const outputMode = document.getElementById('tgt-output').value;
+
+    const focusPrompts = {
+      full: 'Produce a full target assessment: (1) target identity and description, (2) suspected occupants and affiliation, (3) current use and AS activity, (4) threat level, (5) intelligence gaps, (6) recommended action.',
+      threat: 'Produce a threat assessment for this target: AS presence, capability, activity patterns, threat to friendly forces, recommended posture.',
+      targeting: 'Produce a targeting package assessment: (1) target value, (2) strike/raid suitability, (3) collateral damage considerations, (4) recommended method of engagement, (5) exploitation opportunities, (6) risk assessment.',
+      pattern: 'Produce a pattern of life assessment: known activity, personnel movement, vehicle patterns, timing, routines, anomalies, collection gaps.',
+      gaps: 'Identify all critical intelligence gaps for this target — what is unknown, what collection is needed, what PIRs remain unanswered.',
+      priority: 'Rank all targets by threat level and operational value. Produce a priority matrix with justification for each ranking.'
+    };
+
+    const boardText = items.join('\n\n').substring(0, 10000);
+    const dtg = document.getElementById('dtg').textContent;
+
+    if (outputMode === 'combined' || outputMode === 'matrix' || focus === 'priority') {
+      status.textContent = `[ GENERATING COMBINED ASSESSMENT FOR ${targetList.length} TARGETS... ]`;
+      const prompt = `You are JTF NOMAD J2. Analyze all board target card reporting and produce a ${outputMode === 'matrix' ? 'target priority matrix' : 'combined target assessment'} for all detected targets.\n\n${focusPrompts[focus]}\n\nTargets identified: ${targetList.join(', ')}\n\n${context ? `COMMANDER CONTEXT: ${context}\n\n` : ''}DTG: ${dtg}\nCLASSIFICATION: SECRET // NOFORN\n\nBOARD REPORTING:\n${boardText}`;
+      const result = await callClaude(prompt);
+      showOutput(result, `TARGET ASSESSMENT — ${targetList.length} TARGETS`);
+      status.textContent = `[ COMPLETE — ${targetList.length} TARGETS ASSESSED ]`;
+    } else {
+      let allOutput = '';
+      for (let i = 0; i < targetList.length; i++) {
+        const tgt = targetList[i];
+        status.textContent = `[ ASSESSING ${tgt} (${i+1}/${targetList.length})... ]`;
+        const prompt = `You are JTF NOMAD J2. Analyze board reporting and produce a target assessment card for target: ${tgt}.\n\n${focusPrompts[focus]}\n\nFormat output as:\nTARGET: ${tgt}\nDTG: ${dtg}\nCLASSIFICATION: SECRET // NOFORN\n---\n[Assessment]\n---\nCONFIDENCE: [LOW/MODERATE/HIGH]\nINTEL GAPS: [gaps]\nRECOMMENDED ACTION: [action]\n\n${context ? `COMMANDER CONTEXT: ${context}\n\n` : ''}BOARD REPORTING:\n${boardText}`;
+        const result = await callClaude(prompt);
+        allOutput += `${'='.repeat(60)}\n${result}\n\n`;
+      }
+      showOutput(allOutput.trim(), `TARGET CARDS — ${targetList.length} TARGET(S)`);
+      status.textContent = `[ COMPLETE — ${targetList.length} TARGETS ASSESSED ]`;
+    }
+
+  } catch(e) {
+    showOutput('TARGET SCRUB ERROR: ' + e.message, 'ERROR');
+    status.textContent = '[ ERROR: ' + e.message + ' ]';
+  }
+  setLoading(false);
+}
+
+async function scrubBoard() {
   const status = document.getElementById('scrub-status');
   status.style.display = 'block';
   status.textContent = '[ CONNECTING TO BOARD... ]';
   setLoading(true);
   showOutput('⬛ SCRUBBING BOARD...', 'BOARD SCRUB');
-
   try {
-    let allContent = [];
-    let frameIds = [];
-    const filter = document.getElementById('scrub-filter').value.trim().toLowerCase();
-
-    async function fetchBoardItems(url) {
-      let cursor = null;
-      let page = 0;
-      do {
-        const fullUrl = url + (cursor ? `&cursor=${cursor}` : '');
-        const resp = await fetch(fullUrl, {
-          headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
-        });
-        if (!resp.ok) throw new Error(`Miro API error: ${resp.status}`);
-        const data = await resp.json();
-        (data.data || []).forEach(item => {
-          let text = '';
-          if (item.type === 'sticky_note') text = item.data?.content || '';
-          else if (item.type === 'text') text = item.data?.content || '';
-          else if (item.type === 'shape') text = item.data?.content || '';
-          else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
-          else if (item.type === 'frame') { text = item.data?.title || ''; frameIds.push(item.id); }
-          text = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').trim();
-          if (text.length > 1) {
-            if (!filter || text.toLowerCase().includes(filter)) {
-              allContent.push(`[${item.type.toUpperCase()}] ${text}`);
-            }
-          }
-        });
-        cursor = data.cursor || null;
-        page++;
-        status.textContent = `[ PULLING BOARD DATA... ${allContent.length} ITEMS ]`;
-      } while (cursor && page < 100);
-    }
-
-    await fetchBoardItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50`);
-
-    for (const frameId of frameIds.slice(0, 30)) {
-      try {
-        await fetchBoardItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/frames/${frameId}/items?limit=50`);
-      } catch(e) { /* skip inaccessible frames */ }
-    }
-
-    if (allContent.length === 0) {
-      throw new Error('No readable content found on board. Add sticky notes or text blocks first.');
-    }
-
-    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — PROCESSING... ]`;
-
-    // Deduplicate and filter out noise
-    const seen = new Set();
-    const cleaned = allContent.filter(t => {
-      const key = t.replace(/\s+/g,' ').toLowerCase().trim();
-      if (seen.has(key) || key.length < 5) return false;
-      seen.add(key);
-      return true;
-    });
-
-    // Truncate to fit context window (~12000 chars max)
-    let boardText = cleaned.join('\n\n');
-    if (boardText.length > 12000) {
-      boardText = boardText.substring(0, 12000) + '\n\n[TRUNCATED — additional items not shown]';
-    }
-
-    status.textContent = `[ ${cleaned.length} UNIQUE ITEMS — RUNNING ANALYSIS... ]`;
-
+    const filter = document.getElementById('scrub-filter').value.trim();
+    status.textContent = '[ PULLING BOARD DATA... ]';
+    const items = await fetchBoardContent(filter);
+    status.textContent = `[ ${items.length} ITEMS SCRAPED — PROCESSING... ]`;
+    let boardText = items.join('\n\n');
+    if (boardText.length > 12000) boardText = boardText.substring(0,12000) + '\n\n[TRUNCATED]';
     const mode = document.getElementById('scrub-mode').value;
     const modePrompts = {
-      full: `You are analyzing a Delta Force ARMA 3 operations Miro board for OPERATION PHAROH'S REACH. Generate a comprehensive intelligence assessment: (1) overall situation picture, (2) OPFOR assessment, (3) key NAIs and targets, (4) intelligence gaps, (5) recommended priorities. Format as a classified intel brief.`,
-      threat: `Analyze this ops board content and extract all OPFOR/enemy intelligence. Generate a threat assessment: capabilities, TTPs, most likely COA, most dangerous COA, threat matrix.`,
-      pir: `Analyze this ops board and generate Priority Intelligence Requirements (PIRs) with indicators and NAI recommendations based on what's present and what's missing.`,
+      full: `Analyze this Delta Force ops board for OPERATION PHAROH'S REACH. Generate a comprehensive intel assessment: (1) overall situation, (2) OPFOR assessment, (3) key NAIs and targets, (4) intel gaps, (5) recommended priorities.`,
+      threat: `Extract all OPFOR/enemy intel from this ops board. Generate threat assessment: capabilities, TTPs, most likely COA, most dangerous COA, threat matrix.`,
+      pir: `Analyze this ops board and generate PIRs with indicators and NAI recommendations based on what's present and missing.`,
       sitrep: `Format this ops board content as a military SITREP: situation, enemy, friendly, assessment, outlook.`,
-      gaps: `Analyze this ops board and identify critical intelligence gaps — what key information is missing that commanders need before executing. Prioritize by operational impact.`
+      gaps: `Analyze this ops board and identify critical intel gaps — what's missing that commanders need before executing. Prioritize by operational impact.`
     };
-
-    const prompt = `${modePrompts[mode]}\n\nBOARD CONTENT (${cleaned.length} items):\n\n${boardText}`;
-    const result = await callClaude(prompt);
-
+    status.textContent = `[ ${items.length} ITEMS — RUNNING ANALYSIS... ]`;
+    const result = await callClaude(`${modePrompts[mode]}\n\nBOARD CONTENT (${items.length} items):\n\n${boardText}`);
     showOutput(result, 'BOARD SCRUB — ' + mode.toUpperCase());
-    status.textContent = `[ COMPLETE — ${allContent.length} ITEMS PROCESSED ]`;
-    if (postBoard) await postToBoard(result);
-
+    status.textContent = `[ COMPLETE — ${items.length} ITEMS PROCESSED ]`;
   } catch(e) {
     showOutput('SCRUB ERROR: ' + e.message, 'ERROR');
     status.textContent = '[ ERROR: ' + e.message + ' ]';
   }
-
   setLoading(false);
 }
 
-const SYSTEM = `You are an intelligence analyst embedded with a Delta Force special operations unit in an ARMA 3 military simulation. Produce professional, realistic military intelligence analysis using proper military formats, brevity codes, and terminology. Be concise, tactical, and operationally relevant. No disclaimers. Output as if it's a real classified document.`;
-
-function buildPrompt(type) {
-  const dtg = document.getElementById('dtg').textContent;
-  let user = '';
-
-  if (type === 'salute') {
-    user = `DTG: ${dtg}\n\nAnalyze this SALUTE report and produce: (1) formatted SALUTE block, (2) threat assessment, (3) recommended immediate actions, (4) follow-on intelligence tasks.\n\nS: ${document.getElementById('s-size').value}\nA: ${document.getElementById('s-activity').value}\nL: ${document.getElementById('s-location').value}\nU: ${document.getElementById('s-unit').value}\nT: ${document.getElementById('s-time').value}\nE: ${document.getElementById('s-equip').value}\nCONTEXT: ${document.getElementById('s-context').value || 'None'}`;
-  } else if (type === 'pir') {
-    const pirs = [...document.querySelectorAll('#pir-list input')].map((el,i) => `PIR ${i+1}: ${el.value}`).filter(p => !p.endsWith(': ')).join('\n');
-    user = `Generate a PIR/NAI assessment. Include: (1) refined PIRs with indicators, (2) NAI assessment with collection recommendations, (3) OPFOR most likely and most dangerous COA.\n\nOP: ${document.getElementById('pir-op').value}\nAO: ${document.getElementById('pir-ao').value}\nINTENT: ${document.getElementById('pir-intent').value}\nPIRs:\n${pirs}\nNAIs:\n${document.getElementById('pir-nai').value}`;
-  } else if (type === 'coa') {
-    user = `Conduct COA analysis from an intelligence perspective. For each COA assess: (1) OPFOR most likely response, (2) intelligence gaps, (3) vulnerability assessment, (4) recommended COA with justification.\n\nFRIENDLY: ${document.getElementById('coa-friendly').value}\nOPFOR: ${document.getElementById('coa-opfor').value}\nTERRAIN: ${document.getElementById('coa-terrain').value}\nMISSION: ${document.getElementById('coa-mission').value}\nCOAs:\n${document.getElementById('coa-proposed').value}`;
-  } else if (type === 'threat') {
-    user = `Generate threat assessment: (1) OPFOR capabilities, (2) TTPs assessment, (3) most likely COA, (4) most dangerous COA, (5) threat matrix with likelihood/impact, (6) recommended mitigations.\n\nAO: ${document.getElementById('thr-ao').value}\nFACTION: ${document.getElementById('thr-faction').value}\nASSETS: ${document.getElementById('thr-assets').value}\nTTPs: ${document.getElementById('thr-ttps').value}\nFRIENDLY VULN: ${document.getElementById('thr-vuln').value}`;
-  } else if (type === 'freeform') {
-    const fmt = document.getElementById('free-format').value;
-    const sel = selectedContent ? `\n\nBOARD CONTENT:\n${selectedContent}` : '';
-    user = document.getElementById('free-input').value + sel + (fmt ? `\n\nFORMAT: ${fmt}` : '');
-  }
-
-  return user;
-}
-
-function quickActionPrompt(action, content) {
-  const prompts = {
-    salute_analyze: `Analyze this as a SALUTE report. Extract S/A/L/U/T/E elements if present. Produce: formatted SALUTE block, threat assessment, recommended actions.\n\nINPUT:\n${content}`,
-    threat_assess: `Generate a threat assessment from this intel. Include capabilities, TTPs, most likely/dangerous COA, recommended mitigations.\n\nINPUT:\n${content}`,
-    coa_recommend: `Analyze this situation and recommend the best COA. Include: situation assessment, COA options, recommended COA with justification, risk factors.\n\nINPUT:\n${content}`,
-    intel_summary: `Produce a concise intelligence summary from this information. Format: classification header, key facts, assessment, recommendations.\n\nINPUT:\n${content}`,
-    pir_generate: `Generate Priority Intelligence Requirements (PIRs) based on this operational context. Include PIRs with associated indicators and NAI recommendations.\n\nINPUT:\n${content}`,
-    sitrep_format: `Format this as a proper military SITREP. Include: situation, enemy, friendly, assessment, outlook.\n\nINPUT:\n${content}`,
-  };
-  return prompts[action] || `Analyze this intel and provide an assessment:\n\n${content}`;
-}
-
-async function callClaude(userPrompt) {
-  const response = await fetch('https://orange-moon-c3be.donald-caribbean1.workers.dev/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4000,
-      system: SYSTEM,
-      messages: [{ role: 'user', content: userPrompt }]
-    })
-  });
-  const data = await response.json();
-  return data.content?.map(b => b.text || '').join('\n') || 'No response.';
-}
-
-function setLoading(loading) {
-  document.querySelectorAll('.btn').forEach(b => b.disabled = loading);
-  document.getElementById('api-status').textContent = loading ? 'PROCESSING...' : 'READY';
-}
-
-function showOutput(text, label) {
-  lastOutput = text;
-  const box = document.getElementById('output-box');
-  box.style.display = 'block';
-  document.getElementById('output-label').textContent = label || 'ANALYST OUTPUT';
-  document.getElementById('output-text').textContent = text;
-  box.scrollIntoView({ behavior: 'smooth' });
-}
-
-async function runQuick(postBoard = true) {
-  const input = document.getElementById('quick-input').value.trim();
-  if (!input.trim()) { showToast('PASTE INTEL FIRST'); return; }
-  const type = document.getElementById('quick-type').value;
-  const prompt = type === 'auto' ? `Analyze this intel and produce a professional military intelligence assessment:\n\n${input}` : quickActionPrompt(type, input);
+// NAI scrub
+async function scrubNAIs() {
+  const status = document.getElementById('nai-status');
+  status.style.display = 'block';
+  status.textContent = '[ CONNECTING TO BOARD... ]';
   setLoading(true);
-  showOutput('⬛ ANALYST PROCESSING...', 'PROCESSING');
   try {
-    const result = await callClaude(prompt);
-    showOutput(result, 'ANALYST OUTPUT');
-    if (postBoard) await postToBoard(result);
-  } catch(e) {
-    showOutput('ERROR: ' + e.message, 'ERROR');
-  }
-  setLoading(false);
-}
+    status.textContent = '[ PULLING BOARD DATA... ]';
+    const items = await fetchBoardContent('');
+    status.textContent = `[ ${items.length} ITEMS SCRAPED — DETECTING NAIs... ]`;
 
-async function quickAction(action) {
-  let content = document.getElementById('quick-input').value.trim();
-
-  // If no manual input, pull from board via REST API
-  if (!content) {
-    if (!MIRO_TOKEN) { showToast('PASTE A TOKEN FIRST'); return; }
-    setLoading(true);
-    showOutput('⬛ PULLING BOARD CONTENT...', action.toUpperCase().replace('_',' '));
-    try {
-      let items = [];
-      const resp = await fetch(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50`, {
-        headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
-      });
-      const data = await resp.json();
-      (data.data || []).forEach(item => {
-        let text = '';
-        if (item.type === 'sticky_note') text = item.data?.content || '';
-        else if (item.type === 'text') text = item.data?.content || '';
-        else if (item.type === 'shape') text = item.data?.content || '';
-        else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
-        text = text.replace(/<[^>]*>/g,'').trim();
-        if (text.length > 2) items.push(text);
-      });
-      const seen = new Set();
-      content = items.filter(t => { const k = t.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; }).join('\n\n').substring(0, 8000);
-    } catch(e) {
-      showOutput('ERROR PULLING BOARD: ' + e.message, 'ERROR');
-      setLoading(false);
-      return;
+    const filterInput = document.getElementById('nai-filter').value.trim();
+    let naiList = [];
+    if (filterInput) {
+      naiList = filterInput.split(',').map(n => n.trim().toUpperCase()).filter(Boolean);
+    } else {
+      const combined = items.join(' ');
+      const matches = [...new Set([...combined.matchAll(/NAI[-\s]?(\d+)/gi)].map(m => `NAI-${m[1]}`))];
+      matches.sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
+      naiList = matches.length > 0 ? matches : ['ALL NAIs'];
     }
-  }
 
-  if (!content.trim()) { showToast('NO INPUT — PASTE INTEL OR TOKEN'); setLoading(false); return; }
-  const prompt = quickActionPrompt(action, content);
-  setLoading(true);
-  showOutput('⬛ ANALYST PROCESSING...', action.toUpperCase().replace('_',' '));
-  try {
-    const result = await callClaude(prompt);
-    showOutput(result, action.toUpperCase().replace('_',' '));
-    await postToBoard(result);
+    status.textContent = `[ DETECTED ${naiList.length} NAIs: ${naiList.join(', ')} ]`;
+
+    const focus = document.getElementById('nai-focus').value;
+    const context = document.getElementById('nai-context').value;
+    const focusPrompts = {
+      full: 'Produce a full intelligence assessment: (1) confirmed identity and ownership, (2) historical and current use, (3) threat activity and AS involvement, (4) intelligence gaps, (5) recommended actions.',
+      ownership: 'Focus on: (1) pre-AS ownership — who owned it, background, clan/family affiliation, (2) historical use before AS seizure, (3) circumstances of AS takeover.',
+      threat: 'Focus on: (1) current AS activity and use, (2) threat level, (3) most likely and most dangerous COA, (4) recommended targeting or monitoring posture.',
+      gaps: 'Identify all critical intelligence gaps — what is unknown, what collection is needed, what PIRs remain unanswered.',
+      update: 'Produce a status update — what has changed, what is confirmed new, what requires follow-up collection.'
+    };
+
+    const boardText = items.join('\n\n').substring(0, 10000);
+    let allOutput = '';
+
+    for (let i = 0; i < naiList.length; i++) {
+      const nai = naiList[i];
+      status.textContent = `[ ANALYZING ${nai} (${i+1}/${naiList.length})... ]`;
+      const prompt = `You are JTF NOMAD J2. Analyze all board reporting and produce a NAI assessment card for ${nai}.\n\n${focusPrompts[focus]}\n\n${context ? `COMMANDER CONTEXT: ${context}\n\n` : ''}Format output as:\nNAI: ${nai}\nDTG: ${document.getElementById('dtg').textContent}\nCLASSIFICATION: SECRET // NOFORN\n---\n[Assessment]\n---\nCONFIDENCE: [LOW/MODERATE/HIGH]\nCOLLECTION GAPS: [gaps]\nRECOMMENDED ACTION: [action]\n\nBOARD REPORTING:\n${boardText}`;
+      const result = await callClaude(prompt);
+      allOutput += `${'='.repeat(60)}\n${result}\n\n`;
+    }
+
+    showOutput(allOutput.trim(), `NAI SCRUB — ${naiList.length} NAI(s)`);
+    status.textContent = `[ COMPLETE — ${naiList.length} NAIs ANALYZED ]`;
   } catch(e) {
-    showOutput('ERROR: ' + e.message, 'ERROR');
+    showOutput('NAI SCRUB ERROR: ' + e.message, 'ERROR');
+    status.textContent = '[ ERROR: ' + e.message + ' ]';
   }
   setLoading(false);
 }
-
-async function runAnalysis(type, postBoard = true) {
-  const prompt = buildPrompt(type);
-  if (!prompt || prompt.length < 30) { showToast('FILL IN REQUIRED FIELDS'); return; }
-  setLoading(true);
-  const labels = { salute:'SALUTE ANALYSIS', pir:'PIR/NAI ASSESSMENT', coa:'COA ANALYSIS', threat:'THREAT ASSESSMENT', freeform:'ANALYST OUTPUT' };
-  showOutput('⬛ ANALYST PROCESSING...', labels[type]);
-  try {
-    const result = await callClaude(prompt);
-    showOutput(result, labels[type]);
-    if (postBoard) await postToBoard(result);
-  } catch(e) {
-    showOutput('ERROR: ' + e.message, 'ERROR');
-  }
-  setLoading(false);
-}
-
-// Init on load
-initMiro();
 </script>
 </body>
 </html>
