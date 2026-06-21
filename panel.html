@@ -503,7 +503,7 @@ const WORKER_URL = 'https://orange-moon-c3be.donald-caribbean1.workers.dev';
 
 // --- OAuth ---
 function connectMiro() {
-  window.open(WORKER_URL + '/miro/auth', 'miro_auth', 'width=600,height=700,scrollbars=yes');
+  window.location.href = WORKER_URL + '/miro/auth';
 }
 
 async function handleOAuthCallback(code) {
