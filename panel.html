@@ -501,32 +501,53 @@ async function scrubNAIs(postBoard = true) {
   setLoading(true);
 
   try {
-    // Pull all board content
+    // Pull all board content — fetch all item types including frame children
     let allContent = [];
-    let cursor = null;
-    let page = 0;
+    let frameIds = [];
 
-    do {
-      const url = `https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50${cursor ? '&cursor=' + cursor : ''}`;
-      status.textContent = `[ PULLING BOARD DATA... PAGE ${++page} ]`;
-      const resp = await fetch(url, {
-        headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
-      });
-      if (!resp.ok) throw new Error(`Miro API error: ${resp.status}`);
-      const data = await resp.json();
-      (data.data || []).forEach(item => {
-        let text = '';
-        if (item.type === 'sticky_note') text = item.data?.content || '';
-        else if (item.type === 'text') text = item.data?.content || '';
-        else if (item.type === 'shape') text = item.data?.content || '';
-        else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
-        text = text.replace(/<[^>]*>/g, '').trim();
-        if (text.length > 2) allContent.push(text);
-      });
-      cursor = data.cursor || null;
-    } while (cursor && page < 10);
+    async function fetchItems(url) {
+      let cursor = null;
+      let page = 0;
+      do {
+        const fullUrl = url + (cursor ? `&cursor=${cursor}` : '');
+        const resp = await fetch(fullUrl, {
+          headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+        });
+        if (!resp.ok) throw new Error(`Miro API error: ${resp.status}`);
+        const data = await resp.json();
+        (data.data || []).forEach(item => {
+          let text = '';
+          if (item.type === 'sticky_note') text = item.data?.content || '';
+          else if (item.type === 'text') text = item.data?.content || '';
+          else if (item.type === 'shape') text = item.data?.content || '';
+          else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
+          else if (item.type === 'frame') {
+            text = item.data?.title || '';
+            frameIds.push(item.id);
+          }
+          text = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').trim();
+          if (text.length > 1) allContent.push(text);
+        });
+        cursor = data.cursor || null;
+        page++;
+        status.textContent = `[ PULLING BOARD DATA... ${allContent.length} ITEMS ]`;
+      } while (cursor && page < 100);
+    }
+
+    // Fetch all items
+    await fetchItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50`);
+
+    // Also fetch children of each frame to get text inside grouped target cards
+    for (const frameId of frameIds.slice(0, 30)) {
+      try {
+        await fetchItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/frames/${frameId}/items?limit=50`);
+      } catch(e) { /* skip frames we can't read */ }
+    }
 
     if (allContent.length === 0) throw new Error('No content found on board.');
+
+
+    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — DETECTING NAIs... ]`;
 
     // Detect NAIs from filter or auto-detect
     const filterInput = document.getElementById('nai-filter').value.trim();
@@ -534,10 +555,14 @@ async function scrubNAIs(postBoard = true) {
     if (filterInput) {
       naiList = filterInput.split(',').map(n => n.trim().toUpperCase()).filter(Boolean);
     } else {
-      // Auto-detect NAI designations from board content
+      // Auto-detect NAI designations — catch NAI-101, NAI 101, NAI101, nai-101 etc
       const combined = allContent.join(' ');
-      const matches = [...new Set([...combined.matchAll(/NAI[-\s]?\d+/gi)].map(m => m[0].toUpperCase().replace(/\s/g,'-')))];
+      const matches = [...new Set([...combined.matchAll(/NAI[-\s]?(\d+)/gi)].map(m => `NAI-${m[1]}`))];
+      // Sort numerically
+      matches.sort((a,b) => parseInt(a.split('-')[1]) - parseInt(b.split('-')[1]));
       naiList = matches.length > 0 ? matches : ['ALL NAIs'];
+      status.textContent = `[ DETECTED ${naiList.length} NAIs: ${naiList.join(', ')} ]`;
+      await new Promise(r => setTimeout(r, 1500));
     }
 
     const focus = document.getElementById('nai-focus').value;
@@ -637,50 +662,47 @@ async function scrubBoard(postBoard = true) {
   showOutput('⬛ SCRUBBING BOARD...', 'BOARD SCRUB');
 
   try {
-    // Fetch all items from Miro board via REST API
     let allContent = [];
-    let cursor = null;
-    let page = 0;
+    let frameIds = [];
+    const filter = document.getElementById('scrub-filter').value.trim().toLowerCase();
 
-    do {
-      const url = `https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50${cursor ? '&cursor=' + cursor : ''}`;
-      status.textContent = `[ PULLING BOARD DATA... PAGE ${++page} ]`;
-
-      const resp = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${MIRO_TOKEN}`,
-          'Accept': 'application/json'
-        }
-      });
-
-      if (!resp.ok) {
-        throw new Error(`Miro API error: ${resp.status} ${resp.statusText}`);
-      }
-
-      const data = await resp.json();
-      const items = data.data || [];
-
-      items.forEach(item => {
-        let text = '';
-        if (item.type === 'sticky_note') text = item.data?.content || '';
-        else if (item.type === 'text') text = item.data?.content || '';
-        else if (item.type === 'shape') text = item.data?.content || '';
-        else if (item.type === 'card') text = `${item.data?.title || ''} ${item.data?.description || ''}`.trim();
-        else if (item.type === 'frame') text = `[FRAME: ${item.data?.title || 'untitled'}]`;
-
-        // Strip HTML tags
-        text = text.replace(/<[^>]*>/g, '').trim();
-
-        if (text.length > 2) {
-          const filter = document.getElementById('scrub-filter').value.trim().toLowerCase();
-          if (!filter || text.toLowerCase().includes(filter)) {
-            allContent.push(`[${item.type.toUpperCase()}] ${text}`);
+    async function fetchBoardItems(url) {
+      let cursor = null;
+      let page = 0;
+      do {
+        const fullUrl = url + (cursor ? `&cursor=${cursor}` : '');
+        const resp = await fetch(fullUrl, {
+          headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+        });
+        if (!resp.ok) throw new Error(`Miro API error: ${resp.status}`);
+        const data = await resp.json();
+        (data.data || []).forEach(item => {
+          let text = '';
+          if (item.type === 'sticky_note') text = item.data?.content || '';
+          else if (item.type === 'text') text = item.data?.content || '';
+          else if (item.type === 'shape') text = item.data?.content || '';
+          else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
+          else if (item.type === 'frame') { text = item.data?.title || ''; frameIds.push(item.id); }
+          text = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g,' ').trim();
+          if (text.length > 1) {
+            if (!filter || text.toLowerCase().includes(filter)) {
+              allContent.push(`[${item.type.toUpperCase()}] ${text}`);
+            }
           }
-        }
-      });
+        });
+        cursor = data.cursor || null;
+        page++;
+        status.textContent = `[ PULLING BOARD DATA... ${allContent.length} ITEMS ]`;
+      } while (cursor && page < 100);
+    }
 
-      cursor = data.cursor || null;
-    } while (cursor && page < 10);
+    await fetchBoardItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50`);
+
+    for (const frameId of frameIds.slice(0, 30)) {
+      try {
+        await fetchBoardItems(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/frames/${frameId}/items?limit=50`);
+      } catch(e) { /* skip inaccessible frames */ }
+    }
 
     if (allContent.length === 0) {
       throw new Error('No readable content found on board. Add sticky notes or text blocks first.');
