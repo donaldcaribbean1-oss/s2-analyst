@@ -6,7 +6,7 @@
 <title>S2 Intel Analyst</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#0a0c0e;color:#c8d0d8;font-family:'Courier New',monospace;font-size:12px;overflow-x:hidden}
+  body{background:#0a0c0e;color:#c8d0d8;font-family:'Courier New',monospace;font-size:12px;overflow-x:hidden;overflow-y:auto;height:auto}
   .header{background:#060d09;border-bottom:1px solid #1e3a2e;padding:10px 12px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:10}
   .dot{width:7px;height:7px;background:#2dba6e;border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -44,8 +44,9 @@
   .output-actions{display:flex;gap:4px}
   .mini-btn{background:transparent;border:1px solid #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;padding:2px 6px;cursor:pointer;transition:all .15s}
   .mini-btn:hover{border-color:#2dba6e;color:#2dba6e}
-  .output-text{white-space:pre-wrap;font-size:11px;line-height:1.65;color:#c8d0d8;max-height:300px;overflow-y:auto}
-  .output-text::-webkit-scrollbar{width:4px}
+
+
+  .output-text{white-space:pre-wrap;font-size:11px;line-height:1.65;color:#c8d0d8}
   .output-text::-webkit-scrollbar-track{background:#060d09}
   .output-text::-webkit-scrollbar-thumb{background:#1e3a2e}
 
@@ -70,7 +71,7 @@
 
   .divider{border:none;border-top:1px solid #1e3a2e;margin:10px 0}
 
-  .quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+
   .quick-btn{background:#0d1a12;border:1px solid #1e3a2e;color:#4a7a5e;font-family:'Courier New',monospace;font-size:9px;font-weight:700;letter-spacing:1px;padding:8px 6px;cursor:pointer;transition:all .15s;text-align:center}
   .quick-btn:hover{border-color:#2dba6e;color:#2dba6e;background:#0d2b1e}
 </style>
@@ -590,7 +591,7 @@ async function callClaude(userPrompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
+      max_tokens: 4000,
       system: SYSTEM,
       messages: [{ role: 'user', content: userPrompt }]
     })
