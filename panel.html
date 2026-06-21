@@ -88,9 +88,9 @@
 </div>
 
 <div class="status-bar">
-  <div class="stat">STATUS: <b id="api-status">READY</b></div>
+  <div class="stat">ANALYST: <b style="color:#2dba6e">ONLINE</b></div>
   <div class="stat">BOARD: <b id="board-name">--</b></div>
-  <div class="stat">SEL: <b id="sel-count">0</b></div>
+  <div class="stat">OP: <b>PHAROH'S REACH</b></div>
 </div>
 
 <div style="background:#060d09;border-bottom:1px solid #1e3a2e;padding:6px 12px;display:flex;gap:6px;align-items:center">
@@ -174,7 +174,7 @@
   </div>
 
   <div style="color:#4a7a5e;font-size:10px;margin-bottom:10px;line-height:1.5">
-    Select a sticky note or text block on your Miro board, then click an action below. Results post directly to the board as a new sticky.
+    Paste intel below or leave blank to pull from the board automatically. Click an action to analyze and post to board.
   </div>
 
   <div class="quick-actions">
@@ -766,18 +766,35 @@ async function scrubBoard(postBoard = true) {
       throw new Error('No readable content found on board. Add sticky notes or text blocks first.');
     }
 
-    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — RUNNING ANALYSIS... ]`;
+    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — PROCESSING... ]`;
+
+    // Deduplicate and filter out noise
+    const seen = new Set();
+    const cleaned = allContent.filter(t => {
+      const key = t.replace(/\s+/g,' ').toLowerCase().trim();
+      if (seen.has(key) || key.length < 5) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Truncate to fit context window (~12000 chars max)
+    let boardText = cleaned.join('\n\n');
+    if (boardText.length > 12000) {
+      boardText = boardText.substring(0, 12000) + '\n\n[TRUNCATED — additional items not shown]';
+    }
+
+    status.textContent = `[ ${cleaned.length} UNIQUE ITEMS — RUNNING ANALYSIS... ]`;
 
     const mode = document.getElementById('scrub-mode').value;
     const modePrompts = {
-      full: `You are analyzing the complete contents of a Delta Force ARMA 3 operations Miro board called "OPERATION MIDNIGHT SUN". Generate a comprehensive intelligence assessment covering: (1) overall situation picture, (2) OPFOR assessment, (3) key terrain and NAIs, (4) friendly force status, (5) intelligence gaps, (6) recommended priorities. Format as a classified intel brief.`,
-      threat: `Analyze this Miro board content and extract all OPFOR/enemy intelligence. Generate a threat assessment covering: capabilities, TTPs, most likely COA, most dangerous COA, threat matrix. Format as a classified threat assessment.`,
-      pir: `Analyze this Miro board content and generate Priority Intelligence Requirements (PIRs) with associated indicators and NAI recommendations based on what's present and what's missing.`,
-      sitrep: `Format the content of this Miro operations board as a military SITREP. Include: situation, enemy, friendly, assessment, outlook.`,
-      gaps: `Analyze this Miro board content and identify critical intelligence gaps — what key information is missing that commanders need before executing operations. Prioritize by operational impact.`
+      full: `You are analyzing a Delta Force ARMA 3 operations Miro board for OPERATION PHAROH'S REACH. Generate a comprehensive intelligence assessment: (1) overall situation picture, (2) OPFOR assessment, (3) key NAIs and targets, (4) intelligence gaps, (5) recommended priorities. Format as a classified intel brief.`,
+      threat: `Analyze this ops board content and extract all OPFOR/enemy intelligence. Generate a threat assessment: capabilities, TTPs, most likely COA, most dangerous COA, threat matrix.`,
+      pir: `Analyze this ops board and generate Priority Intelligence Requirements (PIRs) with indicators and NAI recommendations based on what's present and what's missing.`,
+      sitrep: `Format this ops board content as a military SITREP: situation, enemy, friendly, assessment, outlook.`,
+      gaps: `Analyze this ops board and identify critical intelligence gaps — what key information is missing that commanders need before executing. Prioritize by operational impact.`
     };
 
-    const prompt = `${modePrompts[mode]}\n\nBOARD CONTENT (${allContent.length} items):\n\n${allContent.join('\n\n')}`;
+    const prompt = `${modePrompts[mode]}\n\nBOARD CONTENT (${cleaned.length} items):\n\n${boardText}`;
     const result = await callClaude(prompt);
 
     showOutput(result, 'BOARD SCRUB — ' + mode.toUpperCase());
@@ -858,11 +875,10 @@ function showOutput(text, label) {
 }
 
 async function runQuick(postBoard = true) {
-  const input = document.getElementById('quick-input').value;
-  const content = input || selectedContent;
-  if (!content.trim()) { showToast('NO INPUT OR BOARD SELECTION'); return; }
+  const input = document.getElementById('quick-input').value.trim();
+  if (!input.trim()) { showToast('PASTE INTEL FIRST'); return; }
   const type = document.getElementById('quick-type').value;
-  const prompt = type === 'auto' ? `Analyze this intel and produce a professional military intelligence assessment:\n\n${content}` : quickActionPrompt(type, content);
+  const prompt = type === 'auto' ? `Analyze this intel and produce a professional military intelligence assessment:\n\n${input}` : quickActionPrompt(type, input);
   setLoading(true);
   showOutput('⬛ ANALYST PROCESSING...', 'PROCESSING');
   try {
@@ -876,8 +892,38 @@ async function runQuick(postBoard = true) {
 }
 
 async function quickAction(action) {
-  const content = selectedContent || document.getElementById('quick-input').value;
-  if (!content.trim()) { showToast('SELECT A BOARD ITEM FIRST'); return; }
+  let content = document.getElementById('quick-input').value.trim();
+
+  // If no manual input, pull from board via REST API
+  if (!content) {
+    if (!MIRO_TOKEN) { showToast('PASTE A TOKEN FIRST'); return; }
+    setLoading(true);
+    showOutput('⬛ PULLING BOARD CONTENT...', action.toUpperCase().replace('_',' '));
+    try {
+      let items = [];
+      const resp = await fetch(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50`, {
+        headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+      });
+      const data = await resp.json();
+      (data.data || []).forEach(item => {
+        let text = '';
+        if (item.type === 'sticky_note') text = item.data?.content || '';
+        else if (item.type === 'text') text = item.data?.content || '';
+        else if (item.type === 'shape') text = item.data?.content || '';
+        else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
+        text = text.replace(/<[^>]*>/g,'').trim();
+        if (text.length > 2) items.push(text);
+      });
+      const seen = new Set();
+      content = items.filter(t => { const k = t.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; }).join('\n\n').substring(0, 8000);
+    } catch(e) {
+      showOutput('ERROR PULLING BOARD: ' + e.message, 'ERROR');
+      setLoading(false);
+      return;
+    }
+  }
+
+  if (!content.trim()) { showToast('NO INPUT — PASTE INTEL OR TOKEN'); setLoading(false); return; }
   const prompt = quickActionPrompt(action, content);
   setLoading(true);
   showOutput('⬛ ANALYST PROCESSING...', action.toUpperCase().replace('_',' '));
