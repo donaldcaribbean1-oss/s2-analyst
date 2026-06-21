@@ -106,7 +106,7 @@
 <!-- SCRUB BOARD TAB -->
 <div class="panel" id="panel-scrub">
   <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">
-    Pulls all sticky notes and text from your Miro board and generates a full intel assessment. Board: <b style="color:#2dba6e">OPERATION MIDNIGHT SUN</b>
+    Pulls all sticky notes and text from your Miro board and generates a full intel assessment. Board: <b style="color:#2dba6e" id="scrub-board-name">LOADING...</b>
   </div>
 
   <div class="field">
@@ -465,6 +465,22 @@ function copyOutput() {
 // Build prompts
 const MIRO_TOKEN = 'eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_YmOVuN9WfsPYaIjW7-3Yap9NwpI';
 const MIRO_BOARD_ID = 'uXjVI0qw29Q=';
+
+async function loadBoardName() {
+  try {
+    const resp = await fetch(`https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}`, {
+      headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+    });
+    const data = await resp.json();
+    const name = data.name || 'UNKNOWN BOARD';
+    const el = document.getElementById('scrub-board-name');
+    if (el) el.textContent = name.toUpperCase();
+  } catch(e) {
+    const el = document.getElementById('scrub-board-name');
+    if (el) el.textContent = 'ERROR FETCHING BOARD';
+  }
+}
+loadBoardName();
 
 async function scrubBoard(postBoard = true) {
   const status = document.getElementById('scrub-status');
