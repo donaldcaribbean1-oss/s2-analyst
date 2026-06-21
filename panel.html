@@ -96,6 +96,7 @@
 <div class="tabs">
   <button class="tab active" onclick="switchTab('quick')">QUICK</button>
   <button class="tab" onclick="switchTab('scrub')">SCRUB BOARD</button>
+  <button class="tab" onclick="switchTab('nai')">NAI SCRUB</button>
   <button class="tab" onclick="switchTab('salute')">SALUTE</button>
   <button class="tab" onclick="switchTab('pir')">PIR/NAI</button>
   <button class="tab" onclick="switchTab('coa')">COA</button>
@@ -131,6 +132,33 @@
   <div id="scrub-status" style="display:none;margin-top:10px;font-size:10px;color:#4a7a5e;line-height:1.6"></div>
 </div>
 
+<!-- NAI SCRUB TAB -->
+<div class="panel" id="panel-nai">
+  <div style="color:#4a7a5e;font-size:10px;margin-bottom:12px;line-height:1.6">
+    Scrubs all RFIs and intel from the board, extracts NAI-specific information, and posts one assessment sticky per NAI back to the board.
+  </div>
+  <div class="field">
+    <label class="label">NAI FILTER <span class="sublabel">(leave blank for ALL NAIs)</span></label>
+    <input id="nai-filter" type="text" placeholder="e.g. NAI-302, NAI-301 — comma separated">
+  </div>
+  <div class="field">
+    <label class="label">ASSESSMENT FOCUS</label>
+    <select id="nai-focus">
+      <option value="full">Full Assessment — ownership, activity, gaps, recommendations</option>
+      <option value="ownership">Ownership & Prior Use Only</option>
+      <option value="threat">Threat & Activity Assessment</option>
+      <option value="gaps">Intelligence Gaps Only</option>
+      <option value="update">Status Update — what has changed</option>
+    </select>
+  </div>
+  <div class="field">
+    <label class="label">ADDITIONAL CONTEXT <span class="sublabel">(optional)</span></label>
+    <textarea id="nai-context" rows="2" placeholder="e.g. Focus on AS logistics nodes, priority is NAI-302 for direct action planning..."></textarea>
+  </div>
+  <button class="btn" onclick="scrubNAIs(true)">SCRUB RFIs + POST NAI CARDS ↗</button>
+  <button class="btn btn-secondary" onclick="scrubNAIs(false)">SCRUB RFIs (PANEL ONLY)</button>
+  <div id="nai-status" style="display:none;margin-top:10px;font-size:10px;color:#4a7a5e;line-height:1.8"></div>
+</div>
 
 <div class="panel active" id="panel-quick">
   <div class="selection-info" id="sel-info">
@@ -463,8 +491,127 @@ function copyOutput() {
 }
 
 // Build prompts
-const MIRO_TOKEN = 'eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_YmOVuN9WfsPYaIjW7-3Yap9NwpI';
+const MIRO_TOKEN = 'eyJtaXJvLm9yaWdpbiI6ImV1MDEifQ_iSD9dIqb9NC6DfXfu5_RLBvmwqw';
 const MIRO_BOARD_ID = 'uXjVI0qw29Q=';
+
+async function scrubNAIs(postBoard = true) {
+  const status = document.getElementById('nai-status');
+  status.style.display = 'block';
+  status.textContent = '[ CONNECTING TO BOARD... ]';
+  setLoading(true);
+
+  try {
+    // Pull all board content
+    let allContent = [];
+    let cursor = null;
+    let page = 0;
+
+    do {
+      const url = `https://api.miro.com/v2/boards/${encodeURIComponent(MIRO_BOARD_ID)}/items?limit=50${cursor ? '&cursor=' + cursor : ''}`;
+      status.textContent = `[ PULLING BOARD DATA... PAGE ${++page} ]`;
+      const resp = await fetch(url, {
+        headers: { 'Authorization': `Bearer ${MIRO_TOKEN}`, 'Accept': 'application/json' }
+      });
+      if (!resp.ok) throw new Error(`Miro API error: ${resp.status}`);
+      const data = await resp.json();
+      (data.data || []).forEach(item => {
+        let text = '';
+        if (item.type === 'sticky_note') text = item.data?.content || '';
+        else if (item.type === 'text') text = item.data?.content || '';
+        else if (item.type === 'shape') text = item.data?.content || '';
+        else if (item.type === 'card') text = `${item.data?.title||''} ${item.data?.description||''}`.trim();
+        text = text.replace(/<[^>]*>/g, '').trim();
+        if (text.length > 2) allContent.push(text);
+      });
+      cursor = data.cursor || null;
+    } while (cursor && page < 10);
+
+    if (allContent.length === 0) throw new Error('No content found on board.');
+
+    // Detect NAIs from filter or auto-detect
+    const filterInput = document.getElementById('nai-filter').value.trim();
+    let naiList = [];
+    if (filterInput) {
+      naiList = filterInput.split(',').map(n => n.trim().toUpperCase()).filter(Boolean);
+    } else {
+      // Auto-detect NAI designations from board content
+      const combined = allContent.join(' ');
+      const matches = [...new Set([...combined.matchAll(/NAI[-\s]?\d+/gi)].map(m => m[0].toUpperCase().replace(/\s/g,'-')))];
+      naiList = matches.length > 0 ? matches : ['ALL NAIs'];
+    }
+
+    const focus = document.getElementById('nai-focus').value;
+    const context = document.getElementById('nai-context').value;
+    const focusPrompts = {
+      full: 'Produce a full intelligence assessment covering: (1) confirmed identity and ownership, (2) historical and current use, (3) threat activity and AS involvement, (4) intelligence gaps, (5) recommended actions.',
+      ownership: 'Focus exclusively on: (1) pre-AS ownership — who owned it, their background, clan/family affiliation, (2) historical use of the facility before AS seizure, (3) circumstances of AS takeover.',
+      threat: 'Focus on: (1) current AS activity and use, (2) threat level assessment, (3) most likely and most dangerous COA, (4) recommended targeting or monitoring posture.',
+      gaps: 'Identify all critical intelligence gaps for this NAI — what is unknown, what collection is needed, and what PIRs remain unanswered.',
+      update: 'Produce a status update assessment — what has changed, what is confirmed new, what requires follow-up collection.'
+    };
+
+    status.textContent = `[ ${allContent.length} ITEMS SCRAPED — GENERATING ${naiList.length} NAI CARD(S)... ]`;
+
+    const boardText = allContent.join('\n\n');
+    let successCount = 0;
+    let outputAll = '';
+
+    for (let i = 0; i < naiList.length; i++) {
+      const nai = naiList[i];
+      status.textContent = `[ ANALYZING ${nai} (${i+1}/${naiList.length})... ]`;
+
+      const prompt = `You are JTF NOMAD J2 intelligence analyst. Analyze all available board reporting and produce a formatted NAI assessment card for ${nai}.
+
+${focusPrompts[focus]}
+
+${context ? `COMMANDER CONTEXT: ${context}\n` : ''}
+Format the output as:
+NAI DESIGNATION: ${nai}
+DTG: [current]
+CLASSIFICATION: SECRET // NOFORN
+---
+[Your structured assessment here]
+---
+CONFIDENCE: [LOW/MODERATE/HIGH]
+COLLECTION GAPS: [list gaps]
+RECOMMENDED ACTION: [specific recommendation]
+
+BOARD REPORTING (${allContent.length} items):
+${boardText}`;
+
+      const result = await callClaude(prompt);
+      outputAll += `\n\n${'='.repeat(60)}\n${result}`;
+
+      if (postBoard) {
+        try {
+          const viewport = await miro.board.viewport.get();
+          const x = viewport.x + viewport.width / 2 + 400 + (i * 650);
+          const y = viewport.y + viewport.height / 2;
+          await miro.board.createStickyNote({
+            content: result.substring(0, 5800),
+            style: { fillColor: '#1d2b1f', textAlign: 'left', textAlignVertical: 'top', fontSize: 13 },
+            x, y, width: 600,
+          });
+          successCount++;
+        } catch(e) {
+          status.textContent += `\n[ FAILED TO POST ${nai}: ${e.message} ]`;
+        }
+      }
+    }
+
+    showOutput(outputAll.trim(), `NAI SCRUB — ${naiList.length} NAI(s)`);
+    status.textContent = postBoard
+      ? `[ COMPLETE — ${naiList.length} NAIs ANALYZED, ${successCount} POSTED TO BOARD ]`
+      : `[ COMPLETE — ${naiList.length} NAIs ANALYZED ]`;
+
+  } catch(e) {
+    showOutput('NAI SCRUB ERROR: ' + e.message, 'ERROR');
+    status.textContent = '[ ERROR: ' + e.message + ' ]';
+  }
+
+  setLoading(false);
+}
+
 
 async function loadBoardName() {
   try {
